@@ -49,6 +49,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        composer config --no-plugins allow-plugins.kylekatarnls/update-helper true
         composer require "laravel/framework:${{ matrix.laravel }}" --no-update
         composer require "orchestra/testbench:${{ matrix.testbench }}" --dev --no-update
         composer require "phpunit/phpunit:${{ matrix.phpunit }}" --dev --no-update
