@@ -1,6 +1,7 @@
 # Laravel Seeder Generator
 
 ![Test CI](https://github.com/tyghaykal/laravel-seeder-generator/actions/workflows/test.yml/badge.svg?branch=main)
+[![Latest Stable Version](http://poser.pugx.org/tyghaykal/laravel-seed-generator/v)](https://packagist.org/packages/tyghaykal/laravel-seed-generator) [![Total Downloads](http://poser.pugx.org/tyghaykal/laravel-seed-generator/downloads)](https://packagist.org/packages/tyghaykal/laravel-seed-generator) [![Latest Unstable Version](http://poser.pugx.org/tyghaykal/laravel-seed-generator/v/unstable)](https://packagist.org/packages/tyghaykal/laravel-seed-generator) [![License](http://poser.pugx.org/tyghaykal/laravel-seed-generator/license)](https://packagist.org/packages/tyghaykal/laravel-seed-generator)
 
 Generate laravel seeder file from a real data from your database.
 
