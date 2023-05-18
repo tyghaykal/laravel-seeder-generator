@@ -21,6 +21,7 @@ jobs:
           - php: 7.3
             laravel: 5.7.*
             testbench: 3.*
+            phpunit: '^7.0'
           #- php: 7.3
           #  laravel: 5.8.*
           #- php: 7.3
@@ -50,6 +51,7 @@ jobs:
       run: |
         composer require "laravel/framework:${{ matrix.laravel }}" --no-update
         composer require "orchestra/testbench:${{ matrix.testbench }}" --dev --no-update
+        composer require "phpunit/phpunit:${{ matrix.phpunit }}" --dev --no-update
         composer update
 
     - name: Execute tests with PHPUnit 8 or below
