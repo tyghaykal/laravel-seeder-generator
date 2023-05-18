@@ -30,22 +30,16 @@ class SeedGeneratorCommandTest extends TestCase
     public function setUp(): void
     {
         parent::setUp();
-        $this->folderResult =
-            version_compare(app()->version(), "8.0.0") >= 0
-                ? "After8"
-                : "Before8";
+        $this->folderResult = version_compare(app()->version(), "8.0.0") >= 0 ? "After8" : "Before8";
+        $this->folderSeeder = version_compare(app()->version(), "8.0.0") >= 0 ? "seeders" : "seeds";
         $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
     }
 
     /** @test */
     public function test_seed_generator_error_no_model_inserted()
     {
-        $this->expectException(
-            \Symfony\Component\Console\Exception\RuntimeException::class
-        );
-        $this->expectExceptionMessage(
-            'Not enough arguments (missing: "model").'
-        );
+        $this->expectException(\Symfony\Component\Console\Exception\RuntimeException::class);
+        $this->expectExceptionMessage('Not enough arguments (missing: "model").');
 
         $this->artisan("seed:generate");
     }
@@ -83,22 +77,14 @@ class SeedGeneratorCommandTest extends TestCase
         $this->artisan("seed:generate $model")->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(
-            File::exists(database_path("seeders/TestModelSeeder.php"))
-        );
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(
-                __DIR__ . "/ExpectedResult/{$this->folderResult}/ResultAll.txt"
-            )
+            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultAll.txt")
         );
-        $actualOutput = str_replace(
-            "\r\n",
-            "\n",
-            file_get_contents(database_path("seeders/TestModelSeeder.php"))
-        );
+        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -113,23 +99,14 @@ class SeedGeneratorCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(
-            File::exists(database_path("seeders/TestModelSeeder.php"))
-        );
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(
-                __DIR__ .
-                    "/ExpectedResult/{$this->folderResult}/ResultSelectedIds.txt"
-            )
+            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultSelectedIds.txt")
         );
-        $actualOutput = str_replace(
-            "\r\n",
-            "\n",
-            file_get_contents(database_path("seeders/TestModelSeeder.php"))
-        );
+        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -144,23 +121,14 @@ class SeedGeneratorCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(
-            File::exists(database_path("seeders/TestModelSeeder.php"))
-        );
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(
-                __DIR__ .
-                    "/ExpectedResult/{$this->folderResult}/ResultIgnoreIds.txt"
-            )
+            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultIgnoreIds.txt")
         );
-        $actualOutput = str_replace(
-            "\r\n",
-            "\n",
-            file_get_contents(database_path("seeders/TestModelSeeder.php"))
-        );
+        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -175,23 +143,14 @@ class SeedGeneratorCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(
-            File::exists(database_path("seeders/TestModelSeeder.php"))
-        );
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(
-                __DIR__ .
-                    "/ExpectedResult/{$this->folderResult}/ResultSelectedField.txt"
-            )
+            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultSelectedField.txt")
         );
-        $actualOutput = str_replace(
-            "\r\n",
-            "\n",
-            file_get_contents(database_path("seeders/TestModelSeeder.php"))
-        );
+        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -206,23 +165,14 @@ class SeedGeneratorCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(
-            File::exists(database_path("seeders/TestModelSeeder.php"))
-        );
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(
-                __DIR__ .
-                    "/ExpectedResult/{$this->folderResult}/ResultIgnoredField.txt"
-            )
+            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultIgnoredField.txt")
         );
-        $actualOutput = str_replace(
-            "\r\n",
-            "\n",
-            file_get_contents(database_path("seeders/TestModelSeeder.php"))
-        );
+        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }

@@ -36,7 +36,6 @@ class SeedGeneratorCommand extends Command
 
             $this->writeSeederFile($files, $seederCommands, $modelInstance);
         } catch (\Exception $e) {
-            // dump($e->getMessage());
             $this->error($e->getMessage());
             return 1;
         }
@@ -146,6 +145,11 @@ class SeedGeneratorCommand extends Command
             $dirSeed = "seeds";
             $stubContent = $files->get(__DIR__ . "/../Stubs/SeedBefore8.stub");
             $fileContent = str_replace(["{{ class }}", "{{ code }}"], [$seedClassName, $code], $stubContent);
+        }
+
+        //check if seed directory exists
+        if (!$files->exists(database_path($dirSeed))) {
+            $files->makeDirectory(database_path($dirSeed));
         }
 
         //get $modelInstance namespace
