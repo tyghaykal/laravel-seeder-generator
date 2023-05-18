@@ -15,8 +15,20 @@ jobs:
     
     strategy:
       matrix:
-        php: [ 8.1, 8.2 ]
-        laravel: [ 9.*, 10.* ]
+        #php: [ 8.1, 8.2 ]
+        #laravel: [ 9.*, 10.* ]
+        include:
+          - php: 7.3
+            laravel: 5.7.*
+            testbench: 3.*
+          #- php: 7.3
+          #  laravel: 5.8.*
+          #- php: 7.3
+          #  laravel: 6.*
+          #- php: 7.4
+          #  laravel: 7.*
+          #- php: 7.4
+          #  laravel: 8.*
         
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
@@ -35,7 +47,10 @@ jobs:
       run: composer validate --strict
 
     - name: Install dependencies
-      run: composer install --prefer-dist --no-progress
+      run: |
+        composer require "laravel/framework:${{ matrix.laravel }}" --no-update
+        composer require "orchestra/testbench:${{ matrix.testbench }}" --dev --no-update
+        composer update
 
     - name: Execute tests with PHPUnit 8 or below
       if: ${{ matrix.laravel == '5.7.*' || matrix.laravel == '5.8.*' }}
