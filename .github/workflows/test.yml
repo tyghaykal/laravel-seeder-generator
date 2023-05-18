@@ -19,21 +19,15 @@ jobs:
         laravel: [ 9.*, 10.* ]
         include:
           - php: 7.3
+            laravel: 5.7.*
+          - php: 7.3
             laravel: 5.8.*
-            testbench: 3.*
-            phpunit: '^7.0'
           - php: 7.3
             laravel: 6.*
-            testbench: 4.*
-            phpunit: '^9.0'
           - php: 7.4
             laravel: 7.*
-            testbench: 5.*
-            phpunit: '^9.0'
           - php: 7.4
             laravel: 8.*
-            testbench: 6.*
-            phpunit: '^9.0'
         
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
