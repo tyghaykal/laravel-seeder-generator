@@ -25,10 +25,14 @@ class SeedGeneratorCommandTest extends TestCase
             "TestModel" => \App\Models\TestModel::class,
         ]);
     }
-
+    private $folderResult = false;
     public function setUp(): void
     {
         parent::setUp();
+        $this->folderResult =
+            version_compare(app()->version(), "8.0.0") >= 0
+                ? "After8"
+                : "Before8";
         $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
     }
 
@@ -85,7 +89,9 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ResultAll.txt")
+            file_get_contents(
+                __DIR__ . "/ExpectedResult/{$this->folderResult}/ResultAll.txt"
+            )
         );
         $actualOutput = str_replace(
             "\r\n",
@@ -113,7 +119,10 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ResultSelectedIds.txt")
+            file_get_contents(
+                __DIR__ .
+                    "/ExpectedResult/{$this->folderResult}/ResultSelectedIds.txt"
+            )
         );
         $actualOutput = str_replace(
             "\r\n",
@@ -141,7 +150,10 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ResultIgnoreIds.txt")
+            file_get_contents(
+                __DIR__ .
+                    "/ExpectedResult/{$this->folderResult}/ResultIgnoreIds.txt"
+            )
         );
         $actualOutput = str_replace(
             "\r\n",
@@ -170,7 +182,8 @@ class SeedGeneratorCommandTest extends TestCase
             "\r\n",
             "\n",
             file_get_contents(
-                __DIR__ . "/ExpectedResult/ResultSelectedField.txt"
+                __DIR__ .
+                    "/ExpectedResult/{$this->folderResult}/ResultSelectedField.txt"
             )
         );
         $actualOutput = str_replace(
@@ -200,7 +213,8 @@ class SeedGeneratorCommandTest extends TestCase
             "\r\n",
             "\n",
             file_get_contents(
-                __DIR__ . "/ExpectedResult/ResultIgnoredField.txt"
+                __DIR__ .
+                    "/ExpectedResult/{$this->folderResult}/ResultIgnoredField.txt"
             )
         );
         $actualOutput = str_replace(

@@ -150,35 +150,51 @@ class SeedGeneratorCommand extends Command
         Model $modelInstance
     ): void {
         $isReplace = false;
-        //get $modelInstance namespace
-        $modelNamespace = get_class($modelInstance->getModel());
-        $modelNamespace = str_replace("App\Models\\", "", $modelNamespace);
-        $modelNamespace = str_replace("App\\", "", $modelNamespace);
-        $filePath = database_path("seeders/{$modelNamespace}Seeder.php");
-
-        if ($files->exists($filePath)) {
-            $isReplace = true;
-            $files->delete($filePath);
-        }
 
         //get $modelInstance class name
         $seedClassName = class_basename($modelInstance->getModel());
         // Changed the suffix to 'Seeder'
         $seedClassName = Str::studly($seedClassName) . "Seeder";
 
-        $seedNamespace = class_basename($modelInstance->getModel());
-        $seedNamespace = str_replace("\\$seedNamespace", "", $seedNamespace);
-        $seedNamespace = str_replace("$seedNamespace", "", $seedNamespace);
-        if ($seedNamespace != "") {
-            $seedNamespace .= "\\{$seedNamespace}";
+        if (version_compare(app()->version(), "8.0.0") >= 0) {
+            $seedNamespace = class_basename($modelInstance->getModel());
+            $seedNamespace = str_replace(
+                "\\$seedNamespace",
+                "",
+                $seedNamespace
+            );
+            $seedNamespace = str_replace("$seedNamespace", "", $seedNamespace);
+            if ($seedNamespace != "") {
+                $seedNamespace .= "\\{$seedNamespace}";
+            }
+            $dirSeed = "seeders";
+            $stubContent = $files->get(__DIR__ . "/../Stubs/SeedAfter8.stub");
+            $fileContent = str_replace(
+                ["{{ namespace }}", "{{ class }}", "{{ code }}"],
+                [$seedNamespace, $seedClassName, $code],
+                $stubContent
+            );
+        } else {
+            $dirSeed = "seeds";
+            $stubContent = $files->get(__DIR__ . "/../Stubs/SeedBefore8.stub");
+            $fileContent = str_replace(
+                ["{{ class }}", "{{ code }}"],
+                [$seedClassName, $code],
+                $stubContent
+            );
         }
 
-        $stubContent = $files->get(__DIR__ . "/../Stubs/Seed.stub");
-        $fileContent = str_replace(
-            ["{{ namespace }}", "{{ class }}", "{{ code }}"],
-            [$seedNamespace, $seedClassName, $code],
-            $stubContent
-        );
+        //get $modelInstance namespace
+        $modelNamespace = get_class($modelInstance->getModel());
+        $modelNamespace = str_replace("App\Models\\", "", $modelNamespace);
+        $modelNamespace = str_replace("App\\", "", $modelNamespace);
+        $filePath = database_path("{$dirSeed}/{$modelNamespace}Seeder.php");
+
+        if ($files->exists($filePath)) {
+            $isReplace = true;
+            $files->delete($filePath);
+        }
+
         $files->put($filePath, $fileContent);
 
         $this->info(
