@@ -1,32 +1,46 @@
 {
-  "name": "tyghaykal/laravel-seed-generator",
-  "description": "Laravel Seed Generator",
-  "autoload": {
-    "psr-4": {
-      "TYGHaykal\\LaravelSeedGenerator\\": "src/"
+    "name": "tyghaykal/laravel-seed-generator",
+    "description": "Laravel Seed Generator",
+    "keywords": [
+        "laravel",
+        "seed",
+        "seeders",
+        "generator",
+        "artisan"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Andre Haykal Rachman",
+            "email": "andrecsd9@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "TYGHaykal\\LaravelSeedGenerator\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "TYGHaykal\\LaravelSeedGenerator\\SeedGeneratorServiceProvider"
+            ]
+        }
+    },
+    "require": {
+        "php": "^7.3|^8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.3.3",
+        "orchestra/testbench": "^6.0"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TYGHaykal\\LaravelSeedGenerator\\Tests\\": "tests/",
+            "TYGHaykal\\LaravelSeedGenerator\\Tests\\Models\\": "tests/Models",
+            "TYGHaykal\\LaravelSeedGenerator\\Tests\\Database\\Migrations\\": "tests/database/migrations",
+            "TYGHaykal\\LaravelSeedGenerator\\Tests\\Database\\Seeders\\": "tests/database/seeders",
+            "App\\Models\\": "tests/Models/"
+        }
     }
-  },
-  "extra": {
-    "laravel": {
-      "providers": [
-        "TYGHaykal\\LaravelSeedGenerator\\SeedGeneratorServiceProvider"
-      ]
-    }
-  },
-  "require": {
-    "php": "^7.3|^8.0"
-  },
-  "require-dev": {
-    "phpunit/phpunit": "^9.3.3",
-    "orchestra/testbench": "^6.0"
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "TYGHaykal\\LaravelSeedGenerator\\Tests\\": "tests/",
-      "TYGHaykal\\LaravelSeedGenerator\\Tests\\Models\\": "tests/Models",
-      "TYGHaykal\\LaravelSeedGenerator\\Tests\\Database\\Migrations\\": "tests/database/migrations",
-      "TYGHaykal\\LaravelSeedGenerator\\Tests\\Database\\Seeders\\": "tests/database/seeders",
-      "App\\Models\\": "tests/Models/"
-    }
-  }
 }
