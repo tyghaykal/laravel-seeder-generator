@@ -16,20 +16,20 @@ class TestModelSeeder extends Seeder
         TestModel::create([
             "name" => "test 1",
             "description" => "description 1",
-            "created_at" => "2023-05-18T11:02:55.000000Z",
-            "updated_at" => "2023-05-18T11:02:55.000000Z",
+            "created_at" => \Carbon\Carbon::parse("2023-05-18T11:02:55.000000Z")->format("Y-m-d H:i:s"),
+            "updated_at" => \Carbon\Carbon::parse("2023-05-18T11:02:55.000000Z")->format("Y-m-d H:i:s"),
         ]);
         TestModel::create([
             "name" => "test 2",
             "description" => "description 2",
-            "created_at" => "2023-05-18T11:02:55.000000Z",
-            "updated_at" => "2023-05-18T11:02:55.000000Z",
+            "created_at" => \Carbon\Carbon::parse("2023-05-18T11:02:55.000000Z")->format("Y-m-d H:i:s"),
+            "updated_at" => \Carbon\Carbon::parse("2023-05-18T11:02:55.000000Z")->format("Y-m-d H:i:s"),
         ]);
         TestModel::create([
             "name" => "test 3",
             "description" => "description 3",
-            "created_at" => "2023-05-18T11:02:55.000000Z",
-            "updated_at" => "2023-05-18T11:02:55.000000Z",
+            "created_at" => \Carbon\Carbon::parse("2023-05-18T11:02:55.000000Z")->format("Y-m-d H:i:s"),
+            "updated_at" => \Carbon\Carbon::parse("2023-05-18T11:02:55.000000Z")->format("Y-m-d H:i:s"),
         ]);
     }
 }

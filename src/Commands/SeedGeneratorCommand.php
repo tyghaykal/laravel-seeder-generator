@@ -22,29 +22,17 @@ class SeedGeneratorCommand extends Command
             $ignoreIds = $this->optionToArray($this->option("ignore-ids"));
 
             if (count($selectedIds) > 0 && count($ignoreIds) > 0) {
-                throw new \Exception(
-                    "You can't use --ignore-fields and --selected-fields at the same time."
-                );
+                throw new \Exception("You can't use --ignore-fields and --selected-fields at the same time.");
             }
 
             $selectedFields = $this->optionToArray($this->option("fields"));
-            $ignoreFields = $this->optionToArray(
-                $this->option("ignore-fields")
-            );
+            $ignoreFields = $this->optionToArray($this->option("ignore-fields"));
 
             if (count($ignoreFields) > 0 && count($selectedFields) > 0) {
-                throw new \Exception(
-                    "You can't use --ignore-fields and --selected-fields at the same time."
-                );
+                throw new \Exception("You can't use --ignore-fields and --selected-fields at the same time.");
             }
 
-            $seederCommands = $this->getSeederCode(
-                $modelInstance,
-                $selectedIds,
-                $ignoreIds,
-                $selectedFields,
-                $ignoreFields
-            );
+            $seederCommands = $this->getSeederCode($modelInstance, $selectedIds, $ignoreIds, $selectedFields, $ignoreFields);
 
             $this->writeSeederFile($files, $seederCommands, $modelInstance);
         } catch (\Exception $e) {
@@ -58,9 +46,7 @@ class SeedGeneratorCommand extends Command
     {
         //check if model name is provided
         if (!$model) {
-            throw new \Exception(
-                "Please provide a model name using the --model option."
-            );
+            throw new \Exception("Please provide a model name using the --model option.");
         }
 
         //check if model file exists in \App\Models
@@ -104,17 +90,11 @@ class SeedGeneratorCommand extends Command
             $dataArray = $data->toArray() ?? [];
             if (count($selectedFields) > 0) {
                 //remove all fields except the selected fields
-                $dataArray = array_intersect_key(
-                    $dataArray,
-                    array_flip($selectedFields)
-                );
+                $dataArray = array_intersect_key($dataArray, array_flip($selectedFields));
             }
             if (count($ignoreFields) > 0) {
                 //return all fields except the ignored fields
-                $dataArray = array_diff_key(
-                    $dataArray,
-                    array_flip($ignoreFields)
-                );
+                $dataArray = array_diff_key($dataArray, array_flip($ignoreFields));
             }
             $dataArray = StringHelper::prettyPrintArray($dataArray, 3);
 
@@ -124,12 +104,7 @@ class SeedGeneratorCommand extends Command
             // Remove trailing comma
             $dataArray = rtrim($dataArray, ",]") . "]";
 
-            $code =
-                "\$newData$key = \\" .
-                get_class($modelInstance->getModel()) .
-                "::create(" .
-                $dataArray .
-                ");";
+            $code = "\$newData$key = \\" . get_class($modelInstance->getModel()) . "::create(" . $dataArray . ");";
 
             if ($key != 0) {
                 $code = StringHelper::generateIndentation($code, 2);
@@ -144,11 +119,8 @@ class SeedGeneratorCommand extends Command
         return $code;
     }
 
-    private function writeSeederFile(
-        Filesystem $files,
-        string $code,
-        Model $modelInstance
-    ): void {
+    private function writeSeederFile(Filesystem $files, string $code, Model $modelInstance): void
+    {
         $isReplace = false;
 
         //get $modelInstance class name
@@ -158,11 +130,7 @@ class SeedGeneratorCommand extends Command
 
         if (version_compare(app()->version(), "8.0.0") >= 0) {
             $seedNamespace = class_basename($modelInstance->getModel());
-            $seedNamespace = str_replace(
-                "\\$seedNamespace",
-                "",
-                $seedNamespace
-            );
+            $seedNamespace = str_replace("\\$seedNamespace", "", $seedNamespace);
             $seedNamespace = str_replace("$seedNamespace", "", $seedNamespace);
             if ($seedNamespace != "") {
                 $seedNamespace .= "\\{$seedNamespace}";
@@ -177,11 +145,7 @@ class SeedGeneratorCommand extends Command
         } else {
             $dirSeed = "seeds";
             $stubContent = $files->get(__DIR__ . "/../Stubs/SeedBefore8.stub");
-            $fileContent = str_replace(
-                ["{{ class }}", "{{ code }}"],
-                [$seedClassName, $code],
-                $stubContent
-            );
+            $fileContent = str_replace(["{{ class }}", "{{ code }}"], [$seedClassName, $code], $stubContent);
         }
 
         //get $modelInstance namespace
@@ -197,9 +161,6 @@ class SeedGeneratorCommand extends Command
 
         $files->put($filePath, $fileContent);
 
-        $this->info(
-            ($isReplace ? "Seed file replaced" : "Seed file created") .
-                " : {$filePath}"
-        );
+        $this->info(($isReplace ? "Seed file replaced" : "Seed file created") . " : {$filePath}");
     }
 }
