@@ -57,7 +57,7 @@ jobs:
 
     - name: Execute tests with PHPUnit 8 or below
       if: ${{ matrix.laravel == '5.7.*' || matrix.laravel == '5.8.*' }}
-      run: vendor/bin/phpunit -c ./phpunit8.xml --coverage-clover=coverage.xml
+      run: vendor/bin/phpunit -c --coverage-clover=coverage.xml
 
     - name: Execute tests
       if: ${{ matrix.laravel != '5.7.*' && matrix.laravel != '5.8.*' }}
