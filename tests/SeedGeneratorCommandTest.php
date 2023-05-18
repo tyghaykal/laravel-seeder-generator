@@ -25,6 +25,16 @@ class SeedGeneratorCommandTest extends TestCase
             "TestModel" => \App\Models\TestModel::class,
         ]);
     }
+
+    protected function createApplication()
+    {
+        $app = require __DIR__ . "/../vendor/laravel/laravel/bootstrap/app.php";
+
+        $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+        return $app;
+    }
+
     private $folderResult = false;
     public function setUp(): void
     {

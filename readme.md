@@ -1,5 +1,7 @@
 # Laravel Seeder Generator
 
+![Test CI](https://github.com/tyghaykal/laravel-seeder-generator/actions/workflows/test.yml/badge.svg?branch=main)
+
 Generate laravel seeder file from a real data from your database.
 
 ## Supported Database

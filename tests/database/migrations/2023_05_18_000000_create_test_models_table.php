@@ -13,10 +13,14 @@ class CreateTestModelsTable extends Migration
      */
     public function up()
     {
-        Schema::create('test_models', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->nullable();
-            $table->string('description')->nullable();
+        Schema::create("test_models", function (Blueprint $table) {
+            if (version_compare(app()->version(), "8.0.0") >= 0) {
+                $table->id();
+            } else {
+                $table->increments("id");
+            }
+            $table->string("name")->nullable();
+            $table->string("description")->nullable();
             $table->timestamps();
         });
     }
@@ -28,6 +32,6 @@ class CreateTestModelsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('test_models');
+        Schema::dropIfExists("test_models");
     }
 }
