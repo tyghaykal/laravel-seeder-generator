@@ -12,9 +12,17 @@ Generate laravel seeder file from a real data from your database.
 -   [x] SQL Server
 -   [x] SQLite
 
-## Laravel Version Compatibility
+## Version Compatibility
 
-I just tested on Laravel 9 and 10.
+| Laravel       | Version    |
+| ------------- | ---------- |
+| 10.x          | 1.0        |
+| 9.x           | 1.0        |
+| 8.x           | 1.0        |
+| 7.x           | 1.0        |
+| 6.x           | 1.0        |
+| 5.8.x         | 1.0        |
+| 5.7.x & below | Not tested |
 
 ## Install
 
