@@ -34,3 +34,6 @@ jobs:
       
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
+      with:
+          name: PHP 8.1 - Laravel
+          files: coverage.xml
