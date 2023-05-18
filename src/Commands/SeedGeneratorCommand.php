@@ -48,6 +48,7 @@ class SeedGeneratorCommand extends Command
 
             $this->writeSeederFile($files, $seederCommands, $modelInstance);
         } catch (\Exception $e) {
+            dump($e->getMessage());
             $this->error($e->getMessage());
             return 1;
         }
