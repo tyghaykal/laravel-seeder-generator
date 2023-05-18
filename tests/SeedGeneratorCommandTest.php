@@ -26,7 +26,7 @@ class SeedGeneratorCommandTest extends TestCase
         ]);
     }
 
-    protected function createApplication()
+    public function createApplication()
     {
         $app = require __DIR__ . "/../vendor/laravel/laravel/bootstrap/app.php";
 
