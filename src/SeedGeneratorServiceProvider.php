@@ -7,14 +7,10 @@ use Illuminate\Support\ServiceProvider;
 
 class SeedGeneratorServiceProvider extends ServiceProvider
 {
-    protected $commands = [
-        SeedGeneratorCommand::class,
-    ];
-
     public function boot()
     {
         if ($this->app->runningInConsole()) {
-            $this->commands($this->commands);
+            $this->commands([SeedGeneratorCommand::class]);
         }
     }
 }

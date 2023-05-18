@@ -26,20 +26,6 @@ class SeedGeneratorCommandTest extends TestCase
         ]);
     }
 
-    // public function createApplication()
-    // {
-    //     if (version_compare(app()->version(), "8.0.0") < 0) {
-    //         $app = require __DIR__ .
-    //             "/../vendor/laravel/laravel/bootstrap/app.php";
-
-    //         $app->make(
-    //             \Illuminate\Contracts\Console\Kernel::class
-    //         )->bootstrap();
-
-    //         return $app;
-    //     }
-    // }
-
     private $folderResult = false;
     public function setUp(): void
     {
