@@ -173,7 +173,7 @@ class SeedGeneratorCommand extends Command
             $seedNamespace .= "\\{$seedNamespace}";
         }
 
-        $stubContent = $files->get(__DIR__ . "/../stubs/seed.stub");
+        $stubContent = $files->get(__DIR__ . "/../Stubs/Seed.stub");
         $fileContent = str_replace(
             ["{{ namespace }}", "{{ class }}", "{{ code }}"],
             [$seedNamespace, $seedClassName, $code],
