@@ -51,14 +51,8 @@ jobs:
 
     - name: Execute tests with PHPUnit 8 or below
       if: ${{ matrix.laravel == '5.7.*' || matrix.laravel == '5.8.*' }}
-      run: vendor/bin/phpunit --coverage-clover=coverage.xml
+      run: vendor/bin/phpunit
 
     - name: Execute tests
       if: ${{ matrix.laravel != '5.7.*' && matrix.laravel != '5.8.*' }}
-      run: vendor/bin/phpunit --coverage-clover=coverage.xml
-      
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-          name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
-          files: coverage.xml
+      run: vendor/bin/phpunit
