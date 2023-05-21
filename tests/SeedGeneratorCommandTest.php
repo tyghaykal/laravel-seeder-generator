@@ -74,17 +74,16 @@ class SeedGeneratorCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        dump("FILE LOC ", database_path("{$this->folderSeeder}/TestModelSeeder.php"));
-        // $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
 
-        // $expectedOutput = str_replace(
-        //     "\r\n",
-        //     "\n",
-        //     file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultAll.txt")
-        // );
-        // $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
-        // // dd($actualOutput);
-        // $this->assertSame($expectedOutput, $actualOutput);
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultAll.txt")
+        );
+        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        // dd($actualOutput);
+        $this->assertSame($expectedOutput, $actualOutput);
     }
 
     public function test_seed_generator_success_full_with_no_additional_asks()
