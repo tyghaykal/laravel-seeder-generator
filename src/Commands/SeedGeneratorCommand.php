@@ -12,10 +12,9 @@ class SeedGeneratorCommand extends Command
     protected $signature = "seed:generate {model?} {--no-additional} {--all-ids} {--all-fields} {--without-relations} {--ids= : The ids to be seeded} {--ignore-ids= : The ids to be ignored} {--fields= : The fields to be seeded} {--ignore-fields= : The fields to be ignored} {--relations= : The relations to be seeded}";
     protected $description = "Generate a seed file from a model";
     private $oldLaravelVersion = false;
-    public function __construct__()
+    public function __construct()
     {
         parent::__construct();
-        dump('e');
         $this->oldLaravelVersion = version_compare(app()->version(), "8.0.0") < 0;
     }
 
@@ -271,8 +270,7 @@ class SeedGeneratorCommand extends Command
             $stubContent = $files->get(__DIR__ . "/../Stubs/SeedBefore8.stub");
             $fileContent = str_replace(["{{ class }}", "{{ code }}"], [$seedClassName, $code], $stubContent);
         }
-        dump(app()->version());
-        dump(version_compare(app()->version(), "8.0.0"));
+
         $dirSeed .= $seedNamespace ? $seedNamespace : "";
         dump($dirSeed);
         //check if seed directory exists
