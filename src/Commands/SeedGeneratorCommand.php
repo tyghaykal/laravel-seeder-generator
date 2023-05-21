@@ -279,13 +279,12 @@ class SeedGeneratorCommand extends Command
         }
 
         //get $modelInstance namespace
-        $filePath = database_path("{$dirSeed}" . ("\\" . $seedClassName) . ".php");
+        $filePath = database_path("{$dirSeed}" . ("/" . $seedClassName) . ".php");
 
         if ($files->exists($filePath)) {
             $isReplace = true;
             $files->delete($filePath);
         }
-        dump($filePath);
         $files->put($filePath, $fileContent);
 
         $this->info(($isReplace ? "Seed file replaced" : "Seed file created") . " : {$filePath}");
