@@ -272,7 +272,7 @@ class SeedGeneratorCommand extends Command
         }
 
         $dirSeed .= $seedNamespace ? $seedNamespace : "";
-
+        dd(database_path($dirSeed));
         //check if seed directory exists
         if (!$files->exists(database_path($dirSeed))) {
             $files->makeDirectory(database_path($dirSeed));
@@ -280,7 +280,7 @@ class SeedGeneratorCommand extends Command
 
         //get $modelInstance namespace
         $filePath = database_path("{$dirSeed}" . ("/" . $seedClassName) . ".php");
-
+        dd($filePath);
         if ($files->exists($filePath)) {
             $isReplace = true;
             $files->delete($filePath);
