@@ -23,20 +23,35 @@ class SeedGeneratorCommand extends Command
         try {
             $model = $this->checkModelInput("model");
             $modelInstance = app($model);
-            
-            if($this->option("no-additional")){
+
+            if ($this->option("no-additional")) {
                 $this->info("No option selected. All data will be seeded.");
-                $this->info("You can use --all-ids, --all-fields, --without-relations, --ids, --ignore-ids, --fields, --ignore-fields, --relations options to customize the seed file.");
-            }else{
+                $this->info(
+                    "You can use --all-ids, --all-fields, --without-relations, --ids, --ignore-ids, --fields, --ignore-fields, --relations options to customize the seed file."
+                );
+                $selectedIds = [];
+                $ignoreIds = [];
+                $selectedFields = [];
+                $ignoreFields = [];
+                $relations = [];
+            } else {
                 list($selectedIds, $ignoreIds) = $this->checkIdsInput();
                 list($selectedFields, $ignoreFields) = $this->checkFieldsInput();
                 $relations = $this->checkRelationInput();
             }
 
-            $seederCommands = $this->getSeederCode($modelInstance, $selectedIds, $ignoreIds, $selectedFields, $ignoreFields, $relations);
+            $seederCommands = $this->getSeederCode(
+                $modelInstance,
+                $selectedIds,
+                $ignoreIds,
+                $selectedFields,
+                $ignoreFields,
+                $relations
+            );
 
             $this->writeSeederFile($files, $seederCommands, $modelInstance);
         } catch (\Exception $e) {
+            dump($e);
             $this->error($e->getMessage());
             return 1;
         }
@@ -53,13 +68,13 @@ class SeedGeneratorCommand extends Command
 
     private function checkModel(string $model): string
     {
-        if($this->oldLaravelVersion) {
+        if ($this->oldLaravelVersion) {
             $modelPath = "\\App\\{$model}";
             if (class_exists($modelPath)) {
                 return "\\App\\$model";
             }
             throw new \Exception("Model file not found at {$modelPath}");
-        }else{
+        } else {
             $modelPath = "\\App\\Models\\{$model}";
             if (class_exists($modelPath)) {
                 return "\\App\\Models\\$model";
@@ -68,16 +83,20 @@ class SeedGeneratorCommand extends Command
         }
     }
 
-    private function checkIdsInput():array
+    private function checkIdsInput(): array
     {
-        if($this->option('all-ids')){
+        if ($this->option('all-ids')) {
             return [[], []];
         }
         $selectedIds = $this->option("ids");
         $ignoredIds = $this->option("ignore-ids");
-        if($selectedIds == null && $ignoredIds == null) {
-            $typeOfIds = $this->choice("Do you want to select or ignore ids?", [1 => "Select all", 2 => "Select some ids", 3 => "Ignore some ids"]);
-            switch($typeOfIds) {
+        if ($selectedIds == null && $ignoredIds == null) {
+            $typeOfIds = $this->choice("Do you want to select or ignore ids?", [
+                1 => "Select all",
+                2 => "Select some ids",
+                3 => "Ignore some ids",
+            ]);
+            switch ($typeOfIds) {
                 case "Select some ids":
                     $selectedIds = $this->ask("Please provide the ids you want to select (seperate with comma)");
                     break;
@@ -91,19 +110,23 @@ class SeedGeneratorCommand extends Command
         if (count($selectedIds) > 0 && count($ignoredIds) > 0) {
             throw new \Exception("You can't use --ignore-ids and --ids at the same time.");
         }
-        return [$selectedIds, $ignoredIds];   
+        return [$selectedIds, $ignoredIds];
     }
 
-    private function checkFieldsInput():array
+    private function checkFieldsInput(): array
     {
-        if($this->option('all-fields')){
+        if ($this->option('all-fields')) {
             return [[], []];
         }
         $selectedFields = $this->option("fields");
         $ignoredFields = $this->option("ignore-fields");
-        if($selectedFields == null && $ignoredFields == null) {
-            $typeOfFields = $this->choice("Do you want to select or ignore fields?", [1 => "Select all", 2 => "Select some fields", 3 => "Ignore some fields"]);
-            switch($typeOfFields) {
+        if ($selectedFields == null && $ignoredFields == null) {
+            $typeOfFields = $this->choice("Do you want to select or ignore fields?", [
+                1 => "Select all",
+                2 => "Select some fields",
+                3 => "Ignore some fields",
+            ]);
+            switch ($typeOfFields) {
                 case "Select some fields":
                     $selectedFields = $this->ask("Please provide the fields you want to select (seperate with comma)");
                     break;
@@ -117,16 +140,16 @@ class SeedGeneratorCommand extends Command
         if (count($selectedFields) > 0 && count($ignoredFields) > 0) {
             throw new \Exception("You can't use --ignore-fields and --fields at the same time.");
         }
-        return [$selectedFields, $ignoredFields];   
+        return [$selectedFields, $ignoredFields];
     }
 
-    private function checkRelationInput():array
+    private function checkRelationInput(): array
     {
-        if(!$this->option("without-relations")){
+        if (!$this->option("without-relations")) {
             $relations = $this->option("relations");
-            if($relations == null) {
+            if ($relations == null) {
                 $typeOfRelation = $this->choice("Do you want to seed the has-many relation?", [1 => "No", 2 => "Yes"]);
-                switch($typeOfRelation) {
+                switch ($typeOfRelation) {
                     case "Yes":
                         $relations = $this->ask("Please provide the has-many relations you want to seed (seperate with comma)");
                         break;
@@ -185,33 +208,32 @@ class SeedGeneratorCommand extends Command
                 $code = StringHelper::generateIndentation($code, 2);
             }
 
-            foreach($relations as $relation) {
-                $relation = Str::camel($relation);
+            foreach ($relations as $relation) {
                 $relationData = $data->$relation;
                 //get the has many relation only
-                if($data->$relation() instanceof \Illuminate\Database\Eloquent\Relations\HasMany){
-                    if($relationData->count() > 0) {
+                if ($data->$relation() instanceof \Illuminate\Database\Eloquent\Relations\HasMany) {
+                    if ($relationData->count() > 0) {
                         $relationSubDatas = $relationData->toArray();
                         $relationCode = "";
-                        foreach($relationSubDatas as $subRelationKey=>$relationSubData){
+                        foreach ($relationSubDatas as $subRelationKey => $relationSubData) {
                             $relationSubData = StringHelper::prettyPrintArray($relationSubData, 4);
-                            if($subRelationKey > 0){
+                            if ($subRelationKey > 0) {
                                 $relationSubData = StringHelper::generateIndentation($relationSubData, 4);
-                            }else{
+                            } else {
                                 $relationSubData = StringHelper::generateIndentation($relationSubData, 3);
                             }
-                            $relationCode .= ($subRelationKey>-1 ? "\n" : "").$relationSubData . ",";
+                            $relationCode .= ($subRelationKey > -1 ? "\n" : "") . $relationSubData . ",";
                         }
                         // Remove trailing comma
                         $relationCode = rtrim($relationCode, ",]") . "]";
                         $relationCode = "\$newData$key->$relation()->createMany([" . $relationCode;
-                        $relationCode = "\n".StringHelper::generateIndentation($relationCode, 2);
-                        $relationCode .= "\n".StringHelper::generateIndentation("]);", 2);
+                        $relationCode = "\n" . StringHelper::generateIndentation($relationCode, 2);
+                        $relationCode .= "\n" . StringHelper::generateIndentation("]);", 2);
                         $code .= $relationCode;
-                        
+
                         // $code = StringHelper::generateIndentation($code, 1);
                     }
-                }else{
+                } else {
                     throw new \Exception("The relation {$relation} is not a has-many relation");
                 }
             }
@@ -237,7 +259,6 @@ class SeedGeneratorCommand extends Command
         $seedNamespace = str_replace("App\\Models", "", $seedNamespace);
 
         if (!$this->oldLaravelVersion) {
-            
             $dirSeed = "seeders";
             $stubContent = $files->get(__DIR__ . "/../Stubs/SeedAfter8.stub");
             $fileContent = str_replace(
@@ -259,7 +280,7 @@ class SeedGeneratorCommand extends Command
         }
 
         //get $modelInstance namespace
-        $filePath = database_path("{$dirSeed}".("\\".$seedClassName).".php");
+        $filePath = database_path("{$dirSeed}" . ("\\" . $seedClassName) . ".php");
 
         if ($files->exists($filePath)) {
             $isReplace = true;
