@@ -28,13 +28,13 @@ class SeedGeneratorCommandTest extends TestCase
 
     private $folderResult = false,
         $folderSeeder = "",
-        $oldLaravel = false;
+        $beforeLaravel7 = false;
     public function setUp(): void
     {
         parent::setUp();
         $this->folderResult = version_compare(app()->version(), "8.0.0") >= 0 ? "After8" : "Before8";
         $this->folderSeeder = version_compare(app()->version(), "8.0.0") >= 0 ? "seeders" : "seeds";
-        $this->oldLaravel = version_compare(app()->version(), "7.0.0") < 0;
+        $this->beforeLaravel7 = version_compare(app()->version(), "7.0.0") < 0;
         $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
     }
 
@@ -91,7 +91,7 @@ class SeedGeneratorCommandTest extends TestCase
 
     public function test_seed_generator_success_full_with_no_additional_asks()
     {
-        if ($this->oldLaravel) {
+        if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
         $model = "TestModel";
@@ -150,7 +150,7 @@ class SeedGeneratorCommandTest extends TestCase
     }
     public function test_seed_generator_success_on_selected_id_asks()
     {
-        if ($this->oldLaravel) {
+        if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
         $model = "TestModel";
@@ -211,7 +211,7 @@ class SeedGeneratorCommandTest extends TestCase
 
     public function test_seed_generator_success_on_ignored_id_asks()
     {
-        if ($this->oldLaravel) {
+        if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
         $model = "TestModel";
@@ -272,7 +272,7 @@ class SeedGeneratorCommandTest extends TestCase
 
     public function test_seed_generator_success_on_selected_fields_asks()
     {
-        if ($this->oldLaravel) {
+        if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
         $model = "TestModel";
@@ -332,7 +332,7 @@ class SeedGeneratorCommandTest extends TestCase
     }
     public function test_seed_generator_success_on_ignored_fields_asks()
     {
-        if ($this->oldLaravel) {
+        if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
         $model = "TestModel";
@@ -393,7 +393,7 @@ class SeedGeneratorCommandTest extends TestCase
 
     public function test_seed_generator_success_on_relations_asks()
     {
-        if ($this->oldLaravel) {
+        if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
         $model = "TestModel";
