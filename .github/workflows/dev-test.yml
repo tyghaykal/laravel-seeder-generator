@@ -51,4 +51,6 @@ jobs:
 
       - name: Execute tests
         if: ${{ matrix.laravel != '5.7.*' && matrix.laravel != '5.8.*' }}
-        run: vendor/bin/phpunit
+        run: |
+          ls -la
+          vendor/bin/phpunit
