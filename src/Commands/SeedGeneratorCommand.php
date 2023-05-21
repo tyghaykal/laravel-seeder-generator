@@ -285,7 +285,7 @@ class SeedGeneratorCommand extends Command
             $isReplace = true;
             $files->delete($filePath);
         }
-
+        dump($filePath);
         $files->put($filePath, $fileContent);
 
         $this->info(($isReplace ? "Seed file replaced" : "Seed file created") . " : {$filePath}");
