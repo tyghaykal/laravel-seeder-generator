@@ -272,6 +272,7 @@ class SeedGeneratorCommand extends Command
         }
 
         $dirSeed .= $seedNamespace ? $seedNamespace : "";
+        dump($dirSeed);
         //check if seed directory exists
         if (!$files->exists(database_path($dirSeed))) {
             $files->makeDirectory(database_path($dirSeed));
