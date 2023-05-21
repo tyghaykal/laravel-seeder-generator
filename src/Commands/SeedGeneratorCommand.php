@@ -68,19 +68,16 @@ class SeedGeneratorCommand extends Command
 
     private function checkModel(string $model): string
     {
-        if ($this->oldLaravelVersion) {
+        $modelPath = "\\App\\Models\\{$model}";
+        if (class_exists($modelPath)) {
+            return "\\App\\Models\\$model";
+        } else {
             $modelPath = "\\App\\{$model}";
             if (class_exists($modelPath)) {
                 return "\\App\\$model";
             }
-            throw new \Exception("Model file not found at {$modelPath}");
-        } else {
-            $modelPath = "\\App\\Models\\{$model}";
-            if (class_exists($modelPath)) {
-                return "\\App\\Models\\$model";
-            }
-            throw new \Exception("Model file not found at {$modelPath}");
         }
+        throw new \Exception("Model file not found at under \App\Models or \App");
     }
 
     private function checkIdsInput(): array
