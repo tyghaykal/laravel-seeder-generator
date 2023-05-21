@@ -55,5 +55,6 @@ jobs:
         if: ${{ matrix.laravel != '5.7.*' && matrix.laravel != '5.8.*' }}
         run: |
           ls vendor/orchestra/testbench-core/laravel/database
-          ls vendor/orchestra/testbench-core/laravel/database/seeders
+          whoami
+          ls -la vendor/orchestra/testbench-core/laravel/database/seeders
           vendor/bin/phpunit
