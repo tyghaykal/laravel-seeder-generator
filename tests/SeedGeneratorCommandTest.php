@@ -74,7 +74,7 @@ class SeedGeneratorCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        dump(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        dump("FILE LOC ", File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
