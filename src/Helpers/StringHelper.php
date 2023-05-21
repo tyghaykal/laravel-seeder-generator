@@ -18,13 +18,18 @@ class StringHelper
             if (is_string($value) && preg_match("/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z/", $value)) {
                 $value = \Carbon\Carbon::parse($value)->format("Y-m-d H:i:s");
             }
-
+            if (is_numeric($value) && intval($value) == $value) {
+                $value = intval($value);
+            }
             $prettyValue = var_export($value, true);
 
             $prettyArrayStrings[] = "{$indentation}" . var_export($key, true) . " => {$prettyValue},";
         }
 
-        return "[\n" . implode("\n", $prettyArrayStrings) . "\n" . str_repeat("    ", $indentationLevel - 1) . "]";
+        $stringResult = "[\n" . implode("\n", $prettyArrayStrings) . "\n" . str_repeat("    ", $indentationLevel - 1) . "]";
+        $stringResult = str_replace(["array (", ")"], ["[", "]"], $stringResult);
+        $stringResult = rtrim($stringResult, ",]") . "]";
+        return $stringResult;
     }
 
     public static function generateIndentation(string $string, int $indentationLevel = 1): string

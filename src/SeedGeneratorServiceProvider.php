@@ -2,8 +2,10 @@
 
 namespace TYGHaykal\LaravelSeedGenerator;
 
-use TYGHaykal\LaravelSeedGenerator\Commands\SeedGeneratorCommand;
 use Illuminate\Support\ServiceProvider;
+use TYGHaykal\LaravelSeedGenerator\Commands\SeedGeneratorAsk;
+use TYGHaykal\LaravelSeedGenerator\Commands\SeedGeneratorInline;
+use TYGHaykal\LaravelSeedGenerator\Commands\SeedGeneratorCommand;
 
 class SeedGeneratorServiceProvider extends ServiceProvider
 {
