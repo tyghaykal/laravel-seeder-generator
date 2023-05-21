@@ -15,6 +15,8 @@ class SeedGeneratorCommand extends Command
     public function __construct__()
     {
         parent::__construct();
+        dump(app()->version());
+        dump(version_compare(app()->version(), "8.0.0"));
         $this->oldLaravelVersion = version_compare(app()->version(), "8.0.0") < 0;
     }
 
