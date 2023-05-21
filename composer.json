@@ -42,7 +42,8 @@
             "TYGHaykal\\LaravelSeedGenerator\\Tests\\Models\\": "tests/Models",
             "TYGHaykal\\LaravelSeedGenerator\\Tests\\Database\\Migrations\\": "tests/database/migrations",
             "TYGHaykal\\LaravelSeedGenerator\\Tests\\Database\\Seeders\\": "tests/database/seeders",
-            "App\\Models\\": "tests/Models/"
+            "App\\Models\\": "tests/Models/",
+            "App\\": "tests/Models/"
         }
     }
 }
