@@ -9,7 +9,7 @@ use TYGHaykal\LaravelSeedGenerator\Helpers\StringHelper;
 
 class SeedGeneratorCommand extends Command
 {
-    protected $signature = "seed:generate {model?} {--all} {--without-relations} {--ids= : The ids to be seeded} {--ignore-ids= : The ids to be ignored} {--fields= : The fields to be seeded} {--ignore-fields= : The fields to be ignored} {--relations= : The relations to be seeded}";
+    protected $signature = "seed:generate {model?} {--no-additional} {--all-ids} {--all-fields} {--without-relations} {--ids= : The ids to be seeded} {--ignore-ids= : The ids to be ignored} {--fields= : The fields to be seeded} {--ignore-fields= : The fields to be ignored} {--relations= : The relations to be seeded}";
     protected $description = "Generate a seed file from a model";
     private $oldLaravelVersion = false;
     public function __construct__()
@@ -24,17 +24,14 @@ class SeedGeneratorCommand extends Command
             $model = $this->checkModelInput("model");
             $modelInstance = app($model);
             
-            if(!$this->option("all")) {
+            if($this->option("no-additional")){
+                $this->info("No option selected. All data will be seeded.");
+                $this->info("You can use --all-ids, --all-fields, --without-relations, --ids, --ignore-ids, --fields, --ignore-fields, --relations options to customize the seed file.");
+            }else{
                 list($selectedIds, $ignoreIds) = $this->checkIdsInput();
                 list($selectedFields, $ignoreFields) = $this->checkFieldsInput();
-            }else {
-                $selectedIds = [];
-                $ignoreIds = [];
-                $selectedFields = [];
-                $ignoreFields = [];
+                $relations = $this->checkRelationInput();
             }
-
-            $relations = $this->checkRelationInput();
 
             $seederCommands = $this->getSeederCode($modelInstance, $selectedIds, $ignoreIds, $selectedFields, $ignoreFields, $relations);
 
@@ -73,6 +70,9 @@ class SeedGeneratorCommand extends Command
 
     private function checkIdsInput():array
     {
+        if($this->option('all-ids')){
+            return [[], []];
+        }
         $selectedIds = $this->option("ids");
         $ignoredIds = $this->option("ignore-ids");
         if($selectedIds == null && $ignoredIds == null) {
@@ -96,6 +96,9 @@ class SeedGeneratorCommand extends Command
 
     private function checkFieldsInput():array
     {
+        if($this->option('all-fields')){
+            return [[], []];
+        }
         $selectedFields = $this->option("fields");
         $ignoredFields = $this->option("ignore-fields");
         if($selectedFields == null && $ignoredFields == null) {
@@ -176,12 +179,6 @@ class SeedGeneratorCommand extends Command
             }
             $dataArray = StringHelper::prettyPrintArray($dataArray, 3);
 
-            // Replace array () into []
-            $dataArray = str_replace(["array (", ")"], ["[", "]"], $dataArray);
-
-            // Remove trailing comma
-            $dataArray = rtrim($dataArray, ",]") . "]";
-
             $code = "\$newData$key = \\" . get_class($modelInstance->getModel()) . "::create(" . $dataArray . ");";
 
             if ($key != 0) {
@@ -198,8 +195,6 @@ class SeedGeneratorCommand extends Command
                         $relationCode = "";
                         foreach($relationSubDatas as $subRelationKey=>$relationSubData){
                             $relationSubData = StringHelper::prettyPrintArray($relationSubData, 4);
-                            $relationSubData = str_replace(["array (", ")"], ["[", "]"], $relationSubData);
-                            $relationSubData = rtrim($relationSubData, ",]") . "]";
                             if($subRelationKey > 0){
                                 $relationSubData = StringHelper::generateIndentation($relationSubData, 4);
                             }else{

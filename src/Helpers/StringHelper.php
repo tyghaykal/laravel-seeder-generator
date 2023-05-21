@@ -24,7 +24,10 @@ class StringHelper
             $prettyArrayStrings[] = "{$indentation}" . var_export($key, true) . " => {$prettyValue},";
         }
 
-        return "[\n" . implode("\n", $prettyArrayStrings) . "\n" . str_repeat("    ", $indentationLevel - 1) . "]";
+        $stringResult = "[\n" . implode("\n", $prettyArrayStrings) . "\n" . str_repeat("    ", $indentationLevel - 1) . "]";
+        $stringResult = str_replace(["array (", ")"], ["[", "]"], $stringResult);
+        $stringResult = rtrim($stringResult, ",]") . "]";
+        return $stringResult;
     }
 
     public static function generateIndentation(string $string, int $indentationLevel = 1): string
