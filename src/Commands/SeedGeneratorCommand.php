@@ -15,8 +15,7 @@ class SeedGeneratorCommand extends Command
     public function __construct__()
     {
         parent::__construct();
-        dump(app()->version());
-        dump(version_compare(app()->version(), "8.0.0"));
+        dump('e');
         $this->oldLaravelVersion = version_compare(app()->version(), "8.0.0") < 0;
     }
 
@@ -272,7 +271,8 @@ class SeedGeneratorCommand extends Command
             $stubContent = $files->get(__DIR__ . "/../Stubs/SeedBefore8.stub");
             $fileContent = str_replace(["{{ class }}", "{{ code }}"], [$seedClassName, $code], $stubContent);
         }
-
+        dump(app()->version());
+        dump(version_compare(app()->version(), "8.0.0"));
         $dirSeed .= $seedNamespace ? $seedNamespace : "";
         dump($dirSeed);
         //check if seed directory exists
