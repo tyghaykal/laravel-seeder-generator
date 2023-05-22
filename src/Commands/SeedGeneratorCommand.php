@@ -11,10 +11,12 @@ class SeedGeneratorCommand extends Command
 {
     protected $signature = "seed:generate {model?} {--no-additional} {--all-ids} {--all-fields} {--without-relations} {--ids= : The ids to be seeded} {--ignore-ids= : The ids to be ignored} {--fields= : The fields to be seeded} {--ignore-fields= : The fields to be ignored} {--relations= : The relations to be seeded}";
     protected $description = "Generate a seed file from a model";
-    private $oldLaravelVersion = false;
+    private $oldLaravelVersion = false,
+        $commands = [];
     public function __construct()
     {
         parent::__construct();
+        $this->commands["main"] = "artisan seed:generate";
         $this->oldLaravelVersion = version_compare(app()->version(), "8.0.0") < 0;
     }
 
@@ -29,6 +31,7 @@ class SeedGeneratorCommand extends Command
                 $this->info(
                     "You can use --all-ids, --all-fields, --without-relations, --ids, --ignore-ids, --fields, --ignore-fields, --relations options to customize the seed file."
                 );
+                $this->commands["no_additional"] = "--no-additional";
                 $selectedIds = [];
                 $ignoreIds = [];
                 $selectedFields = [];
@@ -51,7 +54,6 @@ class SeedGeneratorCommand extends Command
 
             $this->writeSeederFile($files, $seederCommands, $modelInstance);
         } catch (\Exception $e) {
-            // dump($e);
             $this->error($e->getMessage());
             return 1;
         }
@@ -63,6 +65,7 @@ class SeedGeneratorCommand extends Command
         if (!$model) {
             $model = $this->anticipate("Please provide a model name", []);
         }
+        $this->commands["main"] .= " " . $model;
         return $this->checkModel($model);
     }
 
@@ -83,6 +86,7 @@ class SeedGeneratorCommand extends Command
     private function checkIdsInput(): array
     {
         if ($this->option('all-ids')) {
+            $this->commands["ids"] = "--all-ids";
             return [[], []];
         }
         $selectedIds = $this->option("ids");
@@ -102,6 +106,15 @@ class SeedGeneratorCommand extends Command
                     break;
             }
         }
+        if ($selectedIds != null) {
+            $this->commands["ids"] = "--ids={$selectedIds}";
+        }
+        if ($ignoredIds != null) {
+            $this->commands["ids"] = "--ignore-ids={$ignoredIds}";
+        }
+        if ($ignoredIds == null && $selectedIds == null) {
+            $this->commands["ids"] = "--all-ids";
+        }
         $selectedIds = $this->optionToArray($selectedIds);
         $ignoredIds = $this->optionToArray($ignoredIds);
         if (count($selectedIds) > 0 && count($ignoredIds) > 0) {
@@ -113,6 +126,7 @@ class SeedGeneratorCommand extends Command
     private function checkFieldsInput(): array
     {
         if ($this->option('all-fields')) {
+            $this->commands["fields"] = "--all-fields";
             return [[], []];
         }
         $selectedFields = $this->option("fields");
@@ -131,6 +145,15 @@ class SeedGeneratorCommand extends Command
                     $ignoredFields = $this->ask("Please provide the fields you want to ignore (seperate with comma)");
                     break;
             }
+        }
+        if ($ignoredFields != null) {
+            $this->commands["fields"] = "--ignore-fields={$ignoredFields}";
+        }
+        if ($selectedFields != null) {
+            $this->commands["fields"] = "--fields={$selectedFields}";
+        }
+        if ($ignoredFields == null && $selectedFields == null) {
+            $this->commands["fields"] = "--all-fields";
         }
         $selectedFields = $this->optionToArray($selectedFields);
         $ignoredFields = $this->optionToArray($ignoredFields);
@@ -155,8 +178,15 @@ class SeedGeneratorCommand extends Command
                         break;
                 }
             }
+            if ($relations != null) {
+                $this->commands["relation"] = "--relations={$relations}";
+            } else {
+                $this->commands["relation"] = "--without-relations";
+            }
             $relations = $this->optionToArray($relations);
             return $relations;
+        } else {
+            $this->commands["relation"] = "--without-relations";
         }
         return [];
     }
@@ -243,6 +273,23 @@ class SeedGeneratorCommand extends Command
         return $code;
     }
 
+    private function getCommands(): string
+    {
+        if (!isset($this->commands["no_additional"])) {
+            if (
+                $this->commands["ids"] == "--all-ids" &&
+                $this->commands["fields"] == "--all-fields" &&
+                $this->commands["relation"] == "--without-relations"
+            ) {
+                unset($this->commands["ids"]);
+                unset($this->commands["fields"]);
+                unset($this->commands["relation"]);
+                $this->commands["no_additional"] = "--no-additional";
+            }
+        }
+        return implode(" ", $this->commands);
+    }
+
     private function writeSeederFile(Filesystem $files, string $code, Model $modelInstance): void
     {
         $isReplace = false;
@@ -255,18 +302,24 @@ class SeedGeneratorCommand extends Command
         $seedNamespace = $seedNamespace->getNamespaceName();
         $seedNamespace = str_replace("App\\Models", "", $seedNamespace);
 
+        $command = $this->getCommands();
+
         if (!$this->oldLaravelVersion) {
             $dirSeed = "seeders";
             $stubContent = $files->get(__DIR__ . "/../Stubs/SeedAfter8.stub");
             $fileContent = str_replace(
-                ["{{ namespace }}", "{{ class }}", "{{ code }}"],
-                [$seedNamespace, $seedClassName, $code],
+                ["{{ namespace }}", "{{ class }}", "{{ command }}", "{{ code }}"],
+                [$seedNamespace, $seedClassName, $command, $code],
                 $stubContent
             );
         } else {
             $dirSeed = "seeds";
             $stubContent = $files->get(__DIR__ . "/../Stubs/SeedBefore8.stub");
-            $fileContent = str_replace(["{{ class }}", "{{ code }}"], [$seedClassName, $code], $stubContent);
+            $fileContent = str_replace(
+                ["{{ class }}", "{{ command }}", "{{ code }}"],
+                [$seedClassName, $command, $code],
+                $stubContent
+            );
         }
 
         $dirSeed .= $seedNamespace ? $seedNamespace : "";

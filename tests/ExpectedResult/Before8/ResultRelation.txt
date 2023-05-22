@@ -12,6 +12,13 @@ class TestModelSeeder extends Seeder
      */
     public function run()
     {
+        /**
+         * Command :
+         * artisan seed:generate TestModel --all-ids --all-fields --relations=test_model_childs
+         *
+         */
+
+        
         $newData0 = \App\Models\TestModel::create([
             'id' => 1,
             'name' => 'test 1',

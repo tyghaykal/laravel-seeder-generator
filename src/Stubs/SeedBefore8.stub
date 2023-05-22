@@ -12,6 +12,13 @@ class {{ class }} extends Seeder
      */
     public function run()
     {
+        /**
+         * Command :
+         * {{ command }}
+         *
+         */
+
+        
         {{ code }}
     }
 }
