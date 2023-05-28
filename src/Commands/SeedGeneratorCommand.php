@@ -9,39 +9,46 @@ use TYGHaykal\LaravelSeedGenerator\Helpers\StringHelper;
 
 class SeedGeneratorCommand extends Command
 {
-    protected $signature = "seed:generate {model?} {--no-additional} {--all-ids} {--all-fields} {--without-relations} {--ids= : The ids to be seeded} {--ignore-ids= : The ids to be ignored} {--fields= : The fields to be seeded} {--ignore-fields= : The fields to be ignored} {--relations= : The relations to be seeded}";
+    protected $signature = "seed:generate {model?} 
+                                {--show-option} 
+                                {--all-ids} 
+                                {--all-fields} 
+                                {--without-relations} 
+                                {--where=* : The where clause conditions}
+                                {--where-in=* : The where in clause conditions}
+                                {--limit= : Limit data to be seeded} 
+                                {--ids= : The ids to be seeded} 
+                                {--ignore-ids= : The ids to be ignored} 
+                                {--fields= : The fields to be seeded} 
+                                {--ignore-fields= : The fields to be ignored} 
+                                {--relations= : The relations to be seeded}
+                                {--relations-limit= : Limit relation data to be seeded} ";
+                                
     protected $description = "Generate a seed file from a model";
     private $oldLaravelVersion = false,
-        $commands = [];
+        $commands = [], $showOption = false ;
     public function __construct()
     {
         parent::__construct();
         $this->commands["main"] = "artisan seed:generate";
         $this->oldLaravelVersion = version_compare(app()->version(), "8.0.0") < 0;
     }
-
+    
     public function handle(Filesystem $files)
     {
         try {
+            $this->showOption = $this->option("show-option");
+
             $model = $this->checkModelInput("model");
             $modelInstance = app($model);
 
-            if ($this->option("no-additional")) {
-                $this->info("No option selected. All data will be seeded.");
-                $this->info(
-                    "You can use --all-ids, --all-fields, --without-relations, --ids, --ignore-ids, --fields, --ignore-fields, --relations options to customize the seed file."
-                );
-                $this->commands["no_additional"] = "--no-additional";
-                $selectedIds = [];
-                $ignoreIds = [];
-                $selectedFields = [];
-                $ignoreFields = [];
-                $relations = [];
-            } else {
-                list($selectedIds, $ignoreIds) = $this->checkIdsInput();
-                list($selectedFields, $ignoreFields) = $this->checkFieldsInput();
-                $relations = $this->checkRelationInput();
-            }
+            $where = $this->checkWhereInput();
+            $whereIn = $this->checkWhereInInput();
+            $limit = $this->checkLimit();
+            list($selectedIds, $ignoreIds) = $this->checkIdsInput();
+            list($selectedFields, $ignoreFields) = $this->checkFieldsInput();
+            $relations = $this->checkRelationInput();
+            $relationsLimit = $this->checkRelationLimit();
 
             $seederCommands = $this->getSeederCode(
                 $modelInstance,
@@ -49,11 +56,16 @@ class SeedGeneratorCommand extends Command
                 $ignoreIds,
                 $selectedFields,
                 $ignoreFields,
-                $relations
+                $relations,
+                $where,
+                $whereIn,
+                $limit,
+                $relationsLimit
             );
 
             $this->writeSeederFile($files, $seederCommands, $modelInstance);
         } catch (\Exception $e) {
+            dd($e);
             $this->error($e->getMessage());
             return 1;
         }
@@ -83,6 +95,84 @@ class SeedGeneratorCommand extends Command
         throw new \Exception("Model file not found at under \App\Models or \App");
     }
 
+    private function checkLimit(){
+        $limit = $this->option("limit");
+        if ($limit == null && $this->showOption) {
+            $limit = $this->ask("Please provide the limit of data to be seeded");
+        }
+        if ($limit != null) {
+            $this->commands["limit"] = "--limit={$limit}";
+        }
+        return $limit;
+    }
+
+    private function checkRelationLimit(){
+        $limit = $this->option("relations-limit");
+        if ($limit == null && $this->showOption) {
+            $limit = $this->ask("Please provide the limit of relation data to be seeded");
+        }
+        if ($limit != null) {
+            $this->commands["relations-limit"] = "--relations-limit={$limit}";
+        }
+
+        return $limit;
+    }
+
+
+
+    private function checkWhereInput(){
+        $wheres = $this->option("where");
+        $this->commands["where"] = "";
+        if (count($wheres) == 0 && $this->showOption) {
+            $wheres = $this->ask("Please provide the where clause conditions (seperate with comma for column and value)");
+        }
+        if ($wheres != null) {
+            foreach($wheres as $where){
+                $this->commands["where"] .= "--where={$where} ";
+            }
+        }
+        $wheresFinal = [];
+        foreach($wheres as $key=>$where){
+            $result = $this->optionToArray($where);
+            if(count($result) != 2){
+                throw new \Exception("You must provide 2 values for where clause");
+            }
+            $wheresFinal[$key]["column"] = $result[0];
+            $wheresFinal[$key]["value"] = $result[1];
+        }
+        if(count($wheresFinal) == 0){
+            unset($this->commands["where"]);
+        }
+        return $wheresFinal;
+    }
+
+    private function checkWhereInInput(){
+        $whereIns = $this->option("where-in");
+        $this->commands["where-in"] = "";
+        if (count($whereIns) == 0 && $this->showOption) {
+            $whereIns = $this->ask("Please provide the where clause conditions (seperate with comma for column and value)");
+        }
+        if ($whereIns != null) {
+            foreach($whereIns as $whereIn){
+                $this->commands["where-in"] .= "--where-in={$whereIn} ";
+            }
+        }
+        $whereInsFinal = [];
+        foreach($whereIns as $key=>$where){
+            $result = $this->optionToArray($where);
+            if(count($result) < 2){
+                throw new \Exception("You must provide atleast 2 values for where in clause");
+            }
+            $whereInsFinal[$key]["column"] = $result[0];
+            unset($result[0]);
+            $whereInsFinal[$key]["value"] = $result;
+        }
+        if(count($whereInsFinal) == 0){
+            unset($this->commands["where-in"]);
+        }
+        return $whereInsFinal;
+    }
+
     private function checkIdsInput(): array
     {
         if ($this->option('all-ids')) {
@@ -91,7 +181,7 @@ class SeedGeneratorCommand extends Command
         }
         $selectedIds = $this->option("ids");
         $ignoredIds = $this->option("ignore-ids");
-        if ($selectedIds == null && $ignoredIds == null) {
+        if ($selectedIds == null && $ignoredIds == null && $this->showOption) {
             $typeOfIds = $this->choice("Do you want to select or ignore ids?", [
                 1 => "Select all",
                 2 => "Select some ids",
@@ -112,9 +202,6 @@ class SeedGeneratorCommand extends Command
         if ($ignoredIds != null) {
             $this->commands["ids"] = "--ignore-ids={$ignoredIds}";
         }
-        if ($ignoredIds == null && $selectedIds == null) {
-            $this->commands["ids"] = "--all-ids";
-        }
         $selectedIds = $this->optionToArray($selectedIds);
         $ignoredIds = $this->optionToArray($ignoredIds);
         if (count($selectedIds) > 0 && count($ignoredIds) > 0) {
@@ -131,7 +218,7 @@ class SeedGeneratorCommand extends Command
         }
         $selectedFields = $this->option("fields");
         $ignoredFields = $this->option("ignore-fields");
-        if ($selectedFields == null && $ignoredFields == null) {
+        if ($selectedFields == null && $ignoredFields == null && $this->showOption) {
             $typeOfFields = $this->choice("Do you want to select or ignore fields?", [
                 1 => "Select all",
                 2 => "Select some fields",
@@ -152,9 +239,6 @@ class SeedGeneratorCommand extends Command
         if ($selectedFields != null) {
             $this->commands["fields"] = "--fields={$selectedFields}";
         }
-        if ($ignoredFields == null && $selectedFields == null) {
-            $this->commands["fields"] = "--all-fields";
-        }
         $selectedFields = $this->optionToArray($selectedFields);
         $ignoredFields = $this->optionToArray($ignoredFields);
         if (count($selectedFields) > 0 && count($ignoredFields) > 0) {
@@ -167,7 +251,7 @@ class SeedGeneratorCommand extends Command
     {
         if (!$this->option("without-relations")) {
             $relations = $this->option("relations");
-            if ($relations == null) {
+            if ($relations == null && $this->showOption) {
                 $typeOfRelation = $this->choice("Do you want to seed the has-many relation?", [1 => "No", 2 => "Yes"]);
                 switch ($typeOfRelation) {
                     case "Yes":
@@ -180,13 +264,9 @@ class SeedGeneratorCommand extends Command
             }
             if ($relations != null) {
                 $this->commands["relation"] = "--relations={$relations}";
-            } else {
-                $this->commands["relation"] = "--without-relations";
             }
             $relations = $this->optionToArray($relations);
             return $relations;
-        } else {
-            $this->commands["relation"] = "--without-relations";
         }
         return [];
     }
@@ -206,18 +286,49 @@ class SeedGeneratorCommand extends Command
         array $ignoreIds,
         array $selectedFields,
         array $ignoreFields,
-        array $relations
+        array $relations,
+        array $where,
+        array $whereIn,
+        ?int $limit,
+        ?int $relationsLimit
     ): string {
         $modelInstance = $modelInstance->newQuery();
         if (count($selectedIds) > 0) {
-            $modelDatas = $modelInstance->whereIn("id", $selectedIds)->get();
+            $modelInstance = $modelInstance->whereIn("id", $selectedIds);
         } elseif (count($ignoreIds) > 0) {
-            $modelDatas = $modelInstance->whereNotIn("id", $ignoreIds)->get();
-        } else {
-            $modelDatas = $modelInstance->get();
+            $modelInstance = $modelInstance->whereNotIn("id", $ignoreIds);
         }
+
+        if(count($where) > 0){
+            foreach($where as $whereData){
+                $modelInstance = $modelInstance->where($whereData["column"], $whereData["value"]);
+            }
+        }
+
+        if(count($whereIn) > 0){
+            foreach($whereIn as $whereInData){
+                $modelInstance = $modelInstance->whereIn($whereInData["column"], $whereInData["value"]);
+            }
+        }
+        
+        if ($limit != null) {
+            $modelInstance = $modelInstance->limit($limit);
+        }
+        $modelDatas = $modelInstance->get();
+        
+        if ($relationsLimit != null) {
+            foreach ($relations as $relation) {
+                $modelDatas->load([$relation => function ($query) use ($relationsLimit) {
+                    $query->limit($relationsLimit);
+                }]);
+            }
+        } else {
+            $modelDatas->load($relations);
+        }
+
         $codes = [];
         foreach ($modelDatas as $key => $data) {
+            $data->makeHidden($relations);
             $dataArray = $data->toArray() ?? [];
             if (count($selectedFields) > 0) {
                 //remove all fields except the selected fields
@@ -234,7 +345,6 @@ class SeedGeneratorCommand extends Command
             if ($key != 0) {
                 $code = StringHelper::generateIndentation($code, 2);
             }
-
             foreach ($relations as $relation) {
                 $relationData = $data->$relation;
                 //get the has many relation only
@@ -275,17 +385,8 @@ class SeedGeneratorCommand extends Command
 
     private function getCommands(): string
     {
-        if (!isset($this->commands["no_additional"])) {
-            if (
-                $this->commands["ids"] == "--all-ids" &&
-                $this->commands["fields"] == "--all-fields" &&
-                $this->commands["relation"] == "--without-relations"
-            ) {
-                unset($this->commands["ids"]);
-                unset($this->commands["fields"]);
-                unset($this->commands["relation"]);
-                $this->commands["no_additional"] = "--no-additional";
-            }
+        if($this->showOption){
+            $this->commands["show_option"] = "--show-option";
         }
         return implode(" ", $this->commands);
     }
