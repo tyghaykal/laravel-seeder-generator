@@ -53,15 +53,19 @@ php artisan seed:generate
 
 | Option                            | Description                                                                 |
 | --------------------------------- | --------------------------------------------------------------------------- |
-| --no-additional                   | Seed All data and ignore all options                                        |
+| --show-prompt                     | Show menu in prompt                                                         |
 | --all-ids                         | Seed All ids                                                                |
 | --all-fields                      | Seed All fields                                                             |
 | --without-relations               | Seed All data without relations                                             |
+| --where=field,value               | Select data with where clause                                               |
+| --where-in=field,value1,value2    | Select data with where in clause                                            |
+| --limit=int                       | limit seeded data, value must be integer                                    |
 | --ids="id1,id2"                   | The ids to be seeded, cannot be used simultaneously with --ignore-ids       |
 | --ignore-ids="id1,id2"            | The ids to be ignored, cannot be used simultaneously with --ids             |
 | --fields="field1,field2"          | The fields to be seeded, cannot be used simultaneously with --ignore-fields |
 | --ignore-fields="field1,field2"   | The fields to be ignored, cannot be used simultaneously with --fields       |
 | --relations="relation1,relation2" | The relation to be seeded, must be function name of has many relation       |
+| --relations-limit=int             | Limit relation data to be seeded, value must be integer                     |
 
 ### Usage with Option
 
@@ -71,32 +75,62 @@ Change the `ModelNamespace` into your model Namespace without \App\Models or \Ap
 php artisan seed:generate Master\Type
 ```
 
+You can run the command and show the menu using
+
+```bash
+php artisan seed:generate Master\Type --show-prompt
+```
+
+You can filter which data will be included into seeder file using **where** clause
+
+```bash
+php artisan seed:generate Master\Type --where=field,value
+```
+
+You can filter which data will be included into seeder file using **where in** clause
+
+```bash
+php artisan seed:generate Master\Type --where-in=field,value1,value2
+```
+
+You can limit the data will be included into seeder file using **where in** clause
+
+```bash
+php artisan seed:generate Master\Type --limit=10
+```
+
 You can also define which data you want to include to seeder file based on the id with:
 
 ```bash
-php artisan seed:generate ModelNamespace --ids="1,2,3" --all-fields --without-relations
+php artisan seed:generate ModelNamespace --ids="1,2,3"
 ```
 
 Or you want to skip some ids:
 
 ```bash
-php artisan seed:generate ModelNamespace --ignore-ids="1,2,3" --all-fields --without-relations
+php artisan seed:generate ModelNamespace --ignore-ids="1,2,3"
 ```
 
 You can also define which field that you want include to seeder file based on the field name with:
 
 ```bash
-php artisan seed:generate ModelNamespace --fields="id,name" --all-ids --without-relations
+php artisan seed:generate ModelNamespace --fields="id,name"
 ```
 
 Or you want skip some fields:
 
 ```bash
-php artisan seed:generate ModelNamespace --ignore-fields="id,name" --all-ids --without-relations
+php artisan seed:generate ModelNamespace --ignore-fields="id,name"
 ```
 
 You can also define which hasMany relation that you want seed:
 
 ```bash
-php artisan seed:generate ModelNamespace --all-ids --all-fields --relations="relationName1,relationName2"
+php artisan seed:generate ModelNamespace --relations="relationName1,relationName2"
+```
+
+You can also limit the relation that you want seed:
+
+```bash
+php artisan seed:generate ModelNamespace --relations="relationName1,relationName2" --relations-limit=10
 ```
