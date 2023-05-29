@@ -14,7 +14,7 @@ class TestModelSeeder extends Seeder
     {
         /**
          * Command :
-         * artisan seed:generate TestModel --ignore-ids=1,2 --all-fields --without-relations
+         * artisan seed:generate TestModel --ignore-ids=1,2
          *
          */
 

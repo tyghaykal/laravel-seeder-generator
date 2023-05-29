@@ -15,7 +15,7 @@ class TestModelSeeder extends Seeder
     {
         /**
          * Command :
-         * artisan seed:generate TestModel --no-additional
+         * artisan seed:generate TestModel
          *
          */
 

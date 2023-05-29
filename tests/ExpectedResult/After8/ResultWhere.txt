@@ -15,7 +15,7 @@ class TestModelSeeder extends Seeder
     {
         /**
          * Command :
-         * artisan seed:generate TestModel --fields=id,name
+         * artisan seed:generate TestModel --where=id,1
          *
          */
 
@@ -23,14 +23,9 @@ class TestModelSeeder extends Seeder
         $newData0 = \App\Models\TestModel::create([
             'id' => 1,
             'name' => 'test 1',
-        ]);
-        $newData1 = \App\Models\TestModel::create([
-            'id' => 2,
-            'name' => 'test 2',
-        ]);
-        $newData2 = \App\Models\TestModel::create([
-            'id' => 3,
-            'name' => 'test 3',
+            'description' => 'description 1',
+            'created_at' => '2023-05-18 11:02:55',
+            'updated_at' => '2023-05-18 11:02:55',
         ]);
     }
 }

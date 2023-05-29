@@ -27,6 +27,12 @@ class TestModelSeeder extends Seeder
                 "created_at" => \Carbon\Carbon::parse("2023-05-18T11:02:55.000000Z")->format("Y-m-d H:i:s"),
                 "updated_at" => \Carbon\Carbon::parse("2023-05-18T11:02:55.000000Z")->format("Y-m-d H:i:s"),
             ],
+            [
+                "test_model_id" => $data0->id,
+                "name" => "child 2",
+                "created_at" => \Carbon\Carbon::parse("2023-05-18T11:02:55.000000Z")->format("Y-m-d H:i:s"),
+                "updated_at" => \Carbon\Carbon::parse("2023-05-18T11:02:55.000000Z")->format("Y-m-d H:i:s"),
+            ],
         ]);
 
         $data1 = TestModel::create([

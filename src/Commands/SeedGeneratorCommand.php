@@ -10,7 +10,7 @@ use TYGHaykal\LaravelSeedGenerator\Helpers\StringHelper;
 class SeedGeneratorCommand extends Command
 {
     protected $signature = "seed:generate {model?} 
-                                {--show-option} 
+                                {--show-prompt} 
                                 {--all-ids} 
                                 {--all-fields} 
                                 {--without-relations} 
@@ -23,21 +23,22 @@ class SeedGeneratorCommand extends Command
                                 {--ignore-fields= : The fields to be ignored} 
                                 {--relations= : The relations to be seeded}
                                 {--relations-limit= : Limit relation data to be seeded} ";
-                                
+
     protected $description = "Generate a seed file from a model";
     private $oldLaravelVersion = false,
-        $commands = [], $showOption = false ;
+        $commands = [],
+        $showPrompt = false;
     public function __construct()
     {
         parent::__construct();
         $this->commands["main"] = "artisan seed:generate";
         $this->oldLaravelVersion = version_compare(app()->version(), "8.0.0") < 0;
     }
-    
+
     public function handle(Filesystem $files)
     {
         try {
-            $this->showOption = $this->option("show-option");
+            $this->showPrompt = $this->option("show-prompt");
 
             $model = $this->checkModelInput("model");
             $modelInstance = app($model);
@@ -65,7 +66,6 @@ class SeedGeneratorCommand extends Command
 
             $this->writeSeederFile($files, $seederCommands, $modelInstance);
         } catch (\Exception $e) {
-            dd($e);
             $this->error($e->getMessage());
             return 1;
         }
@@ -95,10 +95,19 @@ class SeedGeneratorCommand extends Command
         throw new \Exception("Model file not found at under \App\Models or \App");
     }
 
-    private function checkLimit(){
+    private function checkLimit()
+    {
         $limit = $this->option("limit");
-        if ($limit == null && $this->showOption) {
-            $limit = $this->ask("Please provide the limit of data to be seeded");
+        if ($limit == null && $this->showPrompt) {
+            $typeLimit = $this->choice("Do you want to use limit in seeded data?", [
+                1 => "No",
+                2 => "Yes",
+            ]);
+            switch ($typeLimit) {
+                case "Yes":
+                    $limit = $this->ask("Please provide the limit of data to be seeded");
+                    break;
+            }
         }
         if ($limit != null) {
             $this->commands["limit"] = "--limit={$limit}";
@@ -106,10 +115,19 @@ class SeedGeneratorCommand extends Command
         return $limit;
     }
 
-    private function checkRelationLimit(){
+    private function checkRelationLimit()
+    {
         $limit = $this->option("relations-limit");
-        if ($limit == null && $this->showOption) {
-            $limit = $this->ask("Please provide the limit of relation data to be seeded");
+        if ($limit == null && $this->showPrompt) {
+            $typeLimitRelation = $this->choice("Do you want to use limit in relation?", [
+                1 => "No",
+                2 => "Yes",
+            ]);
+            switch ($typeLimitRelation) {
+                case "Yes":
+                    $limit = $this->ask("Please provide the limit of relation data to be seeded");
+                    break;
+            }
         }
         if ($limit != null) {
             $this->commands["relations-limit"] = "--relations-limit={$limit}";
@@ -118,56 +136,93 @@ class SeedGeneratorCommand extends Command
         return $limit;
     }
 
-
-
-    private function checkWhereInput(){
+    private function checkWhereInput()
+    {
         $wheres = $this->option("where");
         $this->commands["where"] = "";
-        if (count($wheres) == 0 && $this->showOption) {
-            $wheres = $this->ask("Please provide the where clause conditions (seperate with comma for column and value)");
+        if (count($wheres) == 0 && $this->showPrompt) {
+            $wheres = [];
+            while (true) {
+                $isMore = count($wheres) > 0;
+                $typeWhere = $this->choice("Do you want to " . ($isMore ? "add more" : "use") . " where clause conditions?", [
+                    1 => "No",
+                    2 => "Yes",
+                ]);
+                switch ($typeWhere) {
+                    case "Yes":
+                        $wheres[] = $this->ask(
+                            "Please provide the where clause conditions (seperate with comma for column and value)"
+                        );
+                        break;
+                    default:
+                        break 2;
+                }
+            }
         }
         if ($wheres != null) {
-            foreach($wheres as $where){
-                $this->commands["where"] .= "--where={$where} ";
+            foreach ($wheres as $key => $where) {
+                $this->commands["where"] .= ($key > 0 ? " " : "") . "--where={$where}";
             }
         }
         $wheresFinal = [];
-        foreach($wheres as $key=>$where){
+        foreach ($wheres as $key => $where) {
             $result = $this->optionToArray($where);
-            if(count($result) != 2){
+            if (count($result) != 2) {
                 throw new \Exception("You must provide 2 values for where clause");
             }
             $wheresFinal[$key]["column"] = $result[0];
             $wheresFinal[$key]["value"] = $result[1];
         }
-        if(count($wheresFinal) == 0){
+        if (count($wheresFinal) == 0) {
             unset($this->commands["where"]);
         }
+
         return $wheresFinal;
     }
 
-    private function checkWhereInInput(){
+    private function checkWhereInInput()
+    {
         $whereIns = $this->option("where-in");
         $this->commands["where-in"] = "";
-        if (count($whereIns) == 0 && $this->showOption) {
-            $whereIns = $this->ask("Please provide the where clause conditions (seperate with comma for column and value)");
-        }
-        if ($whereIns != null) {
-            foreach($whereIns as $whereIn){
-                $this->commands["where-in"] .= "--where-in={$whereIn} ";
+        if (count($whereIns) == 0 && $this->showPrompt) {
+            $whereIns = [];
+            while (true) {
+                $isMore = count($whereIns) > 0;
+                $typeWhereIn = $this->choice(
+                    "Do you want to " . ($isMore ? "add more" : "use") . " where in clause conditions?",
+                    [
+                        1 => "No",
+                        2 => "Yes",
+                    ]
+                );
+                switch ($typeWhereIn) {
+                    case "Yes":
+                        $whereIns[] = $this->ask(
+                            "Please provide the where in clause conditions (seperate with comma for column and value)"
+                        );
+                        break;
+                    default:
+                        break 2;
+                }
             }
         }
+        if ($whereIns != null) {
+            foreach ($whereIns as $key => $whereIn) {
+                $this->commands["where-in"] .= ($key > 0 ? " " : "") . "--where-in={$whereIn}";
+            }
+        }
+
         $whereInsFinal = [];
-        foreach($whereIns as $key=>$where){
+        foreach ($whereIns as $key => $where) {
             $result = $this->optionToArray($where);
-            if(count($result) < 2){
+            if (count($result) < 2) {
                 throw new \Exception("You must provide atleast 2 values for where in clause");
             }
             $whereInsFinal[$key]["column"] = $result[0];
             unset($result[0]);
             $whereInsFinal[$key]["value"] = $result;
         }
-        if(count($whereInsFinal) == 0){
+        if (count($whereInsFinal) == 0) {
             unset($this->commands["where-in"]);
         }
         return $whereInsFinal;
@@ -181,7 +236,7 @@ class SeedGeneratorCommand extends Command
         }
         $selectedIds = $this->option("ids");
         $ignoredIds = $this->option("ignore-ids");
-        if ($selectedIds == null && $ignoredIds == null && $this->showOption) {
+        if ($selectedIds == null && $ignoredIds == null && $this->showPrompt) {
             $typeOfIds = $this->choice("Do you want to select or ignore ids?", [
                 1 => "Select all",
                 2 => "Select some ids",
@@ -218,7 +273,7 @@ class SeedGeneratorCommand extends Command
         }
         $selectedFields = $this->option("fields");
         $ignoredFields = $this->option("ignore-fields");
-        if ($selectedFields == null && $ignoredFields == null && $this->showOption) {
+        if ($selectedFields == null && $ignoredFields == null && $this->showPrompt) {
             $typeOfFields = $this->choice("Do you want to select or ignore fields?", [
                 1 => "Select all",
                 2 => "Select some fields",
@@ -251,7 +306,7 @@ class SeedGeneratorCommand extends Command
     {
         if (!$this->option("without-relations")) {
             $relations = $this->option("relations");
-            if ($relations == null && $this->showOption) {
+            if ($relations == null && $this->showPrompt) {
                 $typeOfRelation = $this->choice("Do you want to seed the has-many relation?", [1 => "No", 2 => "Yes"]);
                 switch ($typeOfRelation) {
                     case "Yes":
@@ -299,32 +354,22 @@ class SeedGeneratorCommand extends Command
             $modelInstance = $modelInstance->whereNotIn("id", $ignoreIds);
         }
 
-        if(count($where) > 0){
-            foreach($where as $whereData){
+        if (count($where) > 0) {
+            foreach ($where as $whereData) {
                 $modelInstance = $modelInstance->where($whereData["column"], $whereData["value"]);
             }
         }
 
-        if(count($whereIn) > 0){
-            foreach($whereIn as $whereInData){
+        if (count($whereIn) > 0) {
+            foreach ($whereIn as $whereInData) {
                 $modelInstance = $modelInstance->whereIn($whereInData["column"], $whereInData["value"]);
             }
         }
-        
+
         if ($limit != null) {
             $modelInstance = $modelInstance->limit($limit);
         }
         $modelDatas = $modelInstance->get();
-        
-        if ($relationsLimit != null) {
-            foreach ($relations as $relation) {
-                $modelDatas->load([$relation => function ($query) use ($relationsLimit) {
-                    $query->limit($relationsLimit);
-                }]);
-            }
-        } else {
-            $modelDatas->load($relations);
-        }
 
         $codes = [];
         foreach ($modelDatas as $key => $data) {
@@ -346,7 +391,7 @@ class SeedGeneratorCommand extends Command
                 $code = StringHelper::generateIndentation($code, 2);
             }
             foreach ($relations as $relation) {
-                $relationData = $data->$relation;
+                $relationData = $data->$relation->take($relationsLimit);
                 //get the has many relation only
                 if ($data->$relation() instanceof \Illuminate\Database\Eloquent\Relations\HasMany) {
                     if ($relationData->count() > 0) {
@@ -355,7 +400,7 @@ class SeedGeneratorCommand extends Command
                         foreach ($relationSubDatas as $subRelationKey => $relationSubData) {
                             $relationSubData = StringHelper::prettyPrintArray($relationSubData, 4);
                             if ($subRelationKey > 0) {
-                                $relationSubData = StringHelper::generateIndentation($relationSubData, 4);
+                                $relationSubData = StringHelper::generateIndentation($relationSubData, 3);
                             } else {
                                 $relationSubData = StringHelper::generateIndentation($relationSubData, 3);
                             }
@@ -385,9 +430,9 @@ class SeedGeneratorCommand extends Command
 
     private function getCommands(): string
     {
-        if($this->showOption){
-            $this->commands["show_option"] = "--show-option";
-        }
+        // if ($this->showPrompt) {
+        //     $this->commands["show_option"] = "--show-prompt";
+        // }
         return implode(" ", $this->commands);
     }
 
