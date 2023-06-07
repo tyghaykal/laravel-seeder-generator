@@ -28,7 +28,7 @@ Generate laravel seeder file from a real data from your database.
 ## Install
 
 ```bash
-composer require --dev tyghaykal/laravel-seeder-generator
+composer require --dev tyghaykal/laravel-seed-generator
 ```
 
 ## Laravel Setup
