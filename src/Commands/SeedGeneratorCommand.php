@@ -470,9 +470,13 @@ class SeedGeneratorCommand extends Command
 
         $dirSeed .= $seedNamespace ? $seedNamespace : "";
 
-        //check if seed directory exists
-        if (!$files->exists(database_path($dirSeed))) {
-            $files->makeDirectory(database_path($dirSeed));
+        $dirSeedExploded = preg_split("/[\\\\\/]/", $dirSeed);
+        $dirSeedCreation = "";
+        foreach ($dirSeedExploded as $key => $dirSeedExplodedData) {
+            $dirSeedCreation .= ($key > 0 ? "/" : "") . $dirSeedExplodedData;
+            if (!$files->exists(database_path($dirSeedCreation))) {
+                $files->makeDirectory(database_path($dirSeedCreation));
+            }
         }
 
         //get $modelInstance namespace
