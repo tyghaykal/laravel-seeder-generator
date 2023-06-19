@@ -16,7 +16,7 @@ jobs:
         laravel: [9.*, 10.*]
         include:
           - php: 7.3
-              laravel: 5.8.*
+            laravel: 5.8.*
           - php: 7.3
             laravel: 6.*
           - php: 7.4
