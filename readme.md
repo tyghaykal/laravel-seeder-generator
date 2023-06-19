@@ -17,12 +17,12 @@ Generate laravel seeder file from a real data from your database.
 
 | Laravel       | Version    |
 | ------------- | ---------- |
-| 10.x          | ^1.0       |
-| 9.x           | ^1.0       |
-| 8.x           | ^1.0       |
-| 7.x           | ^1.0       |
-| 6.x           | ^1.0       |
-| 5.8.x         | ^1.0       |
+| 10.x          | ^1.4       |
+| 9.x           | ^1.4       |
+| 8.x           | ^1.4       |
+| 7.x           | ^1.4       |
+| 6.x           | ^1.4       |
+| 5.8.x         | ^1.4       |
 | 5.7.x & below | Not tested |
 
 ## Install
@@ -66,6 +66,7 @@ php artisan seed:generate
 | --ignore-fields="field1,field2"   | The fields to be ignored, cannot be used simultaneously with --fields       |
 | --relations="relation1,relation2" | The relation to be seeded, must be function name of has many relation       |
 | --relations-limit=int             | Limit relation data to be seeded, value must be integer                     |
+| --output                          | The location of seeder file                                                 |
 
 ### Usage with Option
 
@@ -133,4 +134,14 @@ You can also limit the relation that you want seed:
 
 ```bash
 php artisan seed:generate ModelNamespace --relations="relationName1,relationName2" --relations-limit=10
+```
+
+You can also change the location of generated seeder file:
+
+```bash
+php artisan seed:generate ModelNamespace --output=Should/Be/In/Here/Data
+
+// it will produce in path database/seeders/Should/Be/In/Here/DataSeeder
+// or
+// it will produce in path database/seeds/Should/Be/In/Here/DataSeeder
 ```

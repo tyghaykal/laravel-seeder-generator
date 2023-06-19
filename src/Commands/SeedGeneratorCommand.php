@@ -22,7 +22,8 @@ class SeedGeneratorCommand extends Command
                                 {--fields= : The fields to be seeded} 
                                 {--ignore-fields= : The fields to be ignored} 
                                 {--relations= : The relations to be seeded}
-                                {--relations-limit= : Limit relation data to be seeded} ";
+                                {--relations-limit= : Limit relation data to be seeded}
+                                {--output= : Output file will be located on this path} ";
 
     protected $description = "Generate a seed file from a model";
     private $oldLaravelVersion = false,
@@ -50,6 +51,7 @@ class SeedGeneratorCommand extends Command
             list($selectedFields, $ignoreFields) = $this->checkFieldsInput();
             $relations = $this->checkRelationInput();
             $relationsLimit = $this->checkRelationLimit();
+            $outputLocation = $this->checkOutput();
 
             $seederCommands = $this->getSeederCode(
                 $modelInstance,
@@ -64,11 +66,31 @@ class SeedGeneratorCommand extends Command
                 $relationsLimit
             );
 
-            $this->writeSeederFile($files, $seederCommands, $modelInstance);
+            $this->writeSeederFile($files, $seederCommands, $modelInstance, $outputLocation);
         } catch (\Exception $e) {
             $this->error($e->getMessage());
             return 1;
         }
+    }
+
+    private function checkOutput()
+    {
+        $outputLocation = $this->option("output");
+        if ($outputLocation == null && $this->showPrompt) {
+            $typeOutput = $this->choice("Do you want to change the output location?", [
+                1 => "No",
+                2 => "Yes",
+            ]);
+            switch ($typeOutput) {
+                case "Yes":
+                    $outputLocation = $this->ask("Please provide the output location");
+                    break;
+            }
+        }
+        if ($outputLocation != null) {
+            $this->commands["output"] = "--output={$outputLocation}";
+        }
+        return $outputLocation;
     }
 
     private function checkModelInput(): string
@@ -374,7 +396,7 @@ class SeedGeneratorCommand extends Command
         $codes = [];
         foreach ($modelDatas as $key => $data) {
             $data->makeHidden($relations);
-            $dataArray = $data->toArray() ?? [];
+            $dataArray = $data->getAttributes() ?? [];
             if (count($selectedFields) > 0) {
                 //remove all fields except the selected fields
                 $dataArray = array_intersect_key($dataArray, array_flip($selectedFields));
@@ -395,7 +417,11 @@ class SeedGeneratorCommand extends Command
                 //get the has many relation only
                 if ($data->$relation() instanceof \Illuminate\Database\Eloquent\Relations\HasMany) {
                     if ($relationData->count() > 0) {
-                        $relationSubDatas = $relationData->toArray();
+                        $relationSubDatas = $relationData
+                            ->map(function ($relationData) {
+                                return $relationData->getAttributes();
+                            })
+                            ->toArray();
                         $relationCode = "";
                         foreach ($relationSubDatas as $subRelationKey => $relationSubData) {
                             $relationSubData = StringHelper::prettyPrintArray($relationSubData, 4);
@@ -436,17 +462,40 @@ class SeedGeneratorCommand extends Command
         return implode(" ", $this->commands);
     }
 
-    private function writeSeederFile(Filesystem $files, string $code, Model $modelInstance): void
+    private function writeSeederFile(Filesystem $files, string $code, Model $modelInstance, ?string $outputLocation = null): void
     {
         $isReplace = false;
 
-        //set seed class name
-        $seedClassName = class_basename($modelInstance);
-        $seedClassName = Str::studly($seedClassName) . "Seeder";
-        //set seed namespace
-        $seedNamespace = new \ReflectionClass($modelInstance);
-        $seedNamespace = $seedNamespace->getNamespaceName();
-        $seedNamespace = str_replace("App\\Models", "", $seedNamespace);
+        if ($outputLocation == null) {
+            //set seed class name
+            $seedClassName = class_basename($modelInstance);
+            $seedClassName = Str::studly($seedClassName) . "Seeder";
+
+            //set seed namespace
+            $seedNamespace = new \ReflectionClass($modelInstance);
+            $seedNamespace = $seedNamespace->getNamespaceName();
+            $seedNamespace = str_replace("App\\Models", "", $seedNamespace);
+        } else {
+            if (!$this->oldLaravelVersion) {
+                $seedNamespace = str_replace("Database\\Seeders", "", $outputLocation);
+                $seedNamespace = str_replace("Database/Seeders", "", $outputLocation);
+            } else {
+                $seedNamespace = str_replace("Database\\Seeds", "", $outputLocation);
+                $seedNamespace = str_replace("Database/Seeds", "", $outputLocation);
+            }
+
+            $seedNamespace = str_replace("/", "\\", $seedNamespace);
+            $seedNamespace = explode('\\', $seedNamespace);
+
+            $seedClassName = Str::studly($seedNamespace[count($seedNamespace) - 1]) . "Seeder";
+            unset($seedNamespace[count($seedNamespace) - 1]);
+
+            //str studly for every $seedNamespace
+            foreach ($seedNamespace as $key => $seedNamespaceData) {
+                $seedNamespace[$key] = Str::studly($seedNamespaceData);
+            }
+            $seedNamespace = '\\' . implode('\\', $seedNamespace);
+        }
 
         $command = $this->getCommands();
 
@@ -469,7 +518,7 @@ class SeedGeneratorCommand extends Command
         }
 
         $dirSeed .= $seedNamespace ? $seedNamespace : "";
-
+        $dirSeed = str_replace("\\", "/", $dirSeed);
         $dirSeedExploded = preg_split("/[\\\\\/]/", $dirSeed);
         $dirSeedCreation = "";
         foreach ($dirSeedExploded as $key => $dirSeedExplodedData) {
