@@ -519,6 +519,7 @@ class SeedGeneratorCommand extends Command
         }
 
         $dirSeed .= $seedNamespace ? $seedNamespace : "";
+        $dirSeed = str_replace("\\", "/", $dirSeed);
         $dirSeedExploded = preg_split("/[\\\\\/]/", $dirSeed);
         $dirSeedCreation = "";
         foreach ($dirSeedExploded as $key => $dirSeedExplodedData) {
