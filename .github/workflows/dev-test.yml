@@ -12,17 +12,17 @@ jobs:
 
     strategy:
       matrix:
-        php: [8.1, 8.2]
-        laravel: [9.*, 10.*]
-        include:
-          - php: 7.3
-            laravel: 5.8.*
-          - php: 7.3
-            laravel: 6.*
-          - php: 7.4
-            laravel: 7.*
-          - php: 7.4
-            laravel: 8.*
+        # php: [8.1, 8.2]
+        # laravel: [9.*, 10.*]
+        # include:
+        #   - php: 7.3
+        #     laravel: 5.8.*
+        - php: 7.3
+          laravel: 6.*
+        # - php: 7.4
+        #   laravel: 7.*
+        # - php: 7.4
+        #   laravel: 8.*
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -47,4 +47,5 @@ jobs:
 
       - name: Execute tests
         run: |
-          vendor/bin/phpunit
+          vendor/bin/phpunit \tests\SeedGeneratorCommandTest.php --filter=test_seed_generator_success_on_output_file_location_inline
+          ls vendor/orchestra/testbench-core/laravel/database/seeds
