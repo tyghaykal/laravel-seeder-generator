@@ -64,25 +64,44 @@ class TableCommand extends Command
                 break;
         }
 
-        // Filter out ignored tables
         $tables = array_filter($tables, function ($tableName) use ($ignoreTables) {
             return !in_array($tableName, $ignoreTables);
         });
 
-        // Filter out selected tables
         if (count($selectedTables)) {
             $tables = array_filter($tables, function ($tableName) use ($selectedTables) {
                 return in_array($tableName, $selectedTables);
             });
+
+            if (count($selectedTables) != count($tables)) {
+                $notFoundTables = array_diff($selectedTables, $tables);
+                throw new \Exception("Table(s) not found: " . implode(", ", $notFoundTables));
+            }
         }
 
         return array_values($tables);
     }
 
-    public function createSeed(string $table)
+    public function getTableData(string $table)
+    {
+        $data = DB::table($table);
+
+        if ($this->parentCommand->getWhereRawQuery()) {
+            $data = $data->whereRaw($this->parentCommand->getWhereRawQuery());
+        }
+
+        if ($this->parentCommand->getWheres()) {
+            foreach ($this->parentCommand->getWheres() as $where) {
+                $data = $data->where($where["column"], $where["type"], $where["value"]);
+            }
+        }
+        return $data->get();
+    }
+
+    public function createSeed(string $table): mixed
     {
         //get data
-        $tableDatas = DB::table($table)->get();
+        $tableDatas = $this->getTableData($table);
         $code = "";
         foreach ($tableDatas as $key => $tableData) {
             if ($key != 0) {
@@ -93,7 +112,6 @@ class TableCommand extends Command
 
         $code = "[\n" . StringHelper::generateIndentation($code, 3) . "\n" . StringHelper::generateIndentation("]", 2);
 
-        // create seed file
         return $this->writeSeederFile($code, $table);
     }
 
