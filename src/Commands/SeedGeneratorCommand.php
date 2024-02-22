@@ -4,11 +4,16 @@ namespace TYGHaykal\LaravelSeedGenerator\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use TYGHaykal\LaravelSeedGenerator\Commands\Table\TableCommand;
 use TYGHaykal\LaravelSeedGenerator\Helpers\StringHelper;
+use TYGHaykal\LaravelSeedGenerator\Helpers\TableHelper;
+use TYGHaykal\LaravelSeedGenerator\Traits\CommandTrait;
 
 class SeedGeneratorCommand extends Command
 {
+    use CommandTrait;
     protected $signature = "seed:generate {model?} 
                                 {--show-prompt} 
                                 {--all-ids} 
@@ -23,7 +28,15 @@ class SeedGeneratorCommand extends Command
                                 {--ignore-fields= : The fields to be ignored} 
                                 {--relations= : The relations to be seeded}
                                 {--relations-limit= : Limit relation data to be seeded}
-                                {--output= : Output file will be located on this path} ";
+                                {--output= : Output file will be located on this path} 
+
+                                {--model-mode : Set the resource mode to model} 
+
+
+                                {--mode= : Set the resource mode (table or model)} 
+                                {--table-mode : Set the resource mode to table} 
+                                {--all-tables : Generate seed for all tables}
+                                {--tables= : Generate seed for selected tables}";
 
     protected $description = "Generate a seed file from a model";
     private $oldLaravelVersion = false,
@@ -41,32 +54,57 @@ class SeedGeneratorCommand extends Command
         try {
             $this->showPrompt = $this->option("show-prompt");
 
-            $model = $this->checkModelInput("model");
-            $modelInstance = app($model);
+            // if ($this->option('all-tables')) {
+            //     $tables = TableHelper::getTables();
 
-            $where = $this->checkWhereInput();
-            $whereIn = $this->checkWhereInInput();
-            $limit = $this->checkLimit();
-            list($selectedIds, $ignoreIds) = $this->checkIdsInput();
-            list($selectedFields, $ignoreFields) = $this->checkFieldsInput();
-            $relations = $this->checkRelationInput();
-            $relationsLimit = $this->checkRelationLimit();
-            $outputLocation = $this->checkOutput();
+            //     $tables = [$tables[0]];
 
-            $seederCommands = $this->getSeederCode(
-                $modelInstance,
-                $selectedIds,
-                $ignoreIds,
-                $selectedFields,
-                $ignoreFields,
-                $relations,
-                $where,
-                $whereIn,
-                $limit,
-                $relationsLimit
-            );
+            //     // create seed
+            //     foreach ($tables as $table) {
+            //         TableHelper::createSeed($this, $table, $files);
+            //     }
+            //     return false;
+            // }
+            $mode = $this->getMode();
+            switch ($mode) {
+                case 'table':
+                    $this->checkSelectedTableInput();
+                    return (new TableCommand($this, $files))->handle();
 
-            $this->writeSeederFile($files, $seederCommands, $modelInstance, $outputLocation);
+                default:
+                    throw new \Exception("Mode $mode not supported, only 'table' and 'model' are supported");
+            }
+
+            // if ($this->option('table-mode')) {
+            //     return (new TableCommand($this, $files))->handle();
+            // }
+
+            // $model = $this->checkModelInput("model");
+            // $modelInstance = app($model);
+
+            // $where = $this->checkWhereInput();
+            // $whereIn = $this->checkWhereInInput();
+            // $limit = $this->checkLimit();
+            // list($selectedIds, $ignoreIds) = $this->checkIdsInput();
+            // list($selectedFields, $ignoreFields) = $this->checkFieldsInput();
+            // $relations = $this->checkRelationInput();
+            // $relationsLimit = $this->checkRelationLimit();
+            // $outputLocation = $this->checkOutput();
+
+            // $seederCommands = $this->getSeederCode(
+            //     $modelInstance,
+            //     $selectedIds,
+            //     $ignoreIds,
+            //     $selectedFields,
+            //     $ignoreFields,
+            //     $relations,
+            //     $where,
+            //     $whereIn,
+            //     $limit,
+            //     $relationsLimit
+            // );
+
+            // $this->writeSeederFile($files, $seederCommands, $modelInstance, $outputLocation);
         } catch (\Exception $e) {
             $this->error($e->getMessage());
             return 1;
@@ -96,7 +134,7 @@ class SeedGeneratorCommand extends Command
     private function checkModelInput(): string
     {
         $model = $this->argument("model");
-        if (!$model) {
+        if (!$model && !$this->option('all-tables')) {
             $model = $this->anticipate("Please provide a model name", []);
         }
         $this->commands["main"] .= " " . $model;
