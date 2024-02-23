@@ -1,4 +1,4 @@
-name: CI DEV Test
+name: CI Staging Test
 
 on:
   push:
