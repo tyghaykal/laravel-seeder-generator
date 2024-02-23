@@ -88,6 +88,7 @@ class TableCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
+        dump("file_exist", File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
         $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
