@@ -41,9 +41,8 @@ class ModelCommandTest extends TestCase
         if (!File::exists(database_path($this->folderSeeder))) {
             File::makeDirectory(database_path($this->folderSeeder));
         }
-
         // copy database\DatabaseSeeder.php to orchestra database folder
-        File::copy(__DIR__ . "/database/DatabaseSeeder.php", database_path($this->folderSeeder . "\DatabaseSeeder.php"));
+        File::copy(__DIR__ . "/database/DatabaseSeeder.php", database_path($this->folderSeeder . "/DatabaseSeeder.php"));
     }
 
     public function test_seed_generator_error_no_mode_inserted()

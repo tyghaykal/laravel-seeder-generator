@@ -38,7 +38,7 @@ class TableCommandTest extends TestCase
         $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
 
         // copy database\DatabaseSeeder.php to orchestra database folder
-        File::copy(__DIR__ . "/database/DatabaseSeeder.php", database_path($this->folderSeeder . "\DatabaseSeeder.php"));
+        File::copy(__DIR__ . "/database/DatabaseSeeder.php", database_path($this->folderSeeder . "/DatabaseSeeder.php"));
     }
 
     public function test_seed_generator_error_no_mode_inserted()
