@@ -11,7 +11,7 @@ class SeedGeneratorServiceProvider extends ServiceProvider
 {
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__ . '/config/config.php', 'seed-generator');
+        $this->mergeConfigFrom(__DIR__ . '/Config/config.php', 'seed-generator');
     }
 
     public function boot()
@@ -19,7 +19,7 @@ class SeedGeneratorServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->publishes(
                 [
-                    __DIR__ . '/config/config.php' => config_path('seed-generator.php'),
+                    __DIR__ . '/Config/config.php' => config_path('seed-generator.php'),
                 ],
                 'config'
             );
