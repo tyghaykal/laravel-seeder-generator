@@ -1113,6 +1113,10 @@ class ModelCommandTest extends TestCase
 
     public function test_seed_generator_success_on_multiple_models_prompt()
     {
+        if ($this->beforeLaravel7) {
+            $this->markTestSkipped("This test is not supported on Laravel < 8");
+        }
+
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
