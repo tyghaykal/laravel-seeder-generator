@@ -1,10 +1,9 @@
 <?php
-namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class TestModelSeeder extends Seeder
+class DataSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -15,7 +14,7 @@ class TestModelSeeder extends Seeder
     {
         /**
          * Command :
-         * artisan seed:generate TestModel
+         * artisan seed:generate --model-mode --model=TestModel --output=Should/Be/In/Here/Data
          *
          */
 

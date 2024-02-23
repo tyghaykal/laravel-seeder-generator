@@ -15,15 +15,15 @@ class TestModelSeeder extends Seeder
     {
         /**
          * Command :
-         * artisan seed:generate TestModel --where=id,1
+         * artisan seed:generate --model-mode --model=TestModel --where-raw-query='id > 1 AND id < 3'
          *
          */
 
         
         $newData0 = \App\Models\TestModel::create([
-            'id' => 1,
-            'name' => 'test 1',
-            'description' => 'description 1',
+            'id' => 2,
+            'name' => 'test 2',
+            'description' => 'description 2',
             'created_at' => '2023-05-18 11:02:55',
             'updated_at' => '2023-05-18 11:02:55',
         ]);

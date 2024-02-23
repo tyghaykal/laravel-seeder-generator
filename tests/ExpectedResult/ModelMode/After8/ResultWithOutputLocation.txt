@@ -15,7 +15,7 @@ class DataSeeder extends Seeder
     {
         /**
          * Command :
-         * artisan seed:generate TestModel --output=Should/Be/In/Here/Data
+         * artisan seed:generate --model-mode --model=TestModel --output=Should/Be/In/Here/Data
          *
          */
 

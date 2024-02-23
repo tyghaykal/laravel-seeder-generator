@@ -2,11 +2,12 @@
 namespace TYGHaykal\LaravelSeedGenerator\Traits;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Model;
 
 trait CommandTrait
 {
     private array $selectedTables = [],
-        $runCommand = [],
+        $runCommands = [],
         $wheres = [],
         $whereIns = [],
         $whereNotIns = [],
@@ -14,30 +15,72 @@ trait CommandTrait
         $selectedIds = [],
         $ignoredIds = [],
         $selectedFields = [],
-        $ignoredFields = [];
+        $ignoredFields = [],
+        $relations = [];
 
     private ?string $limit = null,
         $outputLocation = null,
-        $rawQuery;
+        $rawQuery,
+        $model,
+        $relationLimits;
+
+    public function isOldLaravelVersion()
+    {
+        return version_compare(app()->version(), "8.0.0") < 0;
+    }
+
+    public function getRunCommand()
+    {
+        $runCommand = "artisan seed:generate ";
+        $runCommand .= implode(" ", $this->runCommands);
+        return $runCommand;
+    }
 
     public function getMode(): string
     {
         $mode = "";
         if ($this->option('table-mode')) {
-            $this->runCommand["mode"] = "--table-mode";
+            $this->runCommands["mode"] = "--table-mode";
             $mode = "table";
         } elseif ($this->option('model-mode')) {
             $mode = "model";
-            $this->runCommand["mode"] = "--model-mode";
+            $this->runCommands["mode"] = "--model-mode";
         } else {
             $mode = $this->option("mode");
             if (!$mode) {
-                $mode = $this->choice("Please provide the mode?", ["table", "model"]);
+                $mode = $this->choice("Please provide the mode", ["table", "model"]);
             }
-            $this->runCommand["mode"] = "--mode={$mode}";
+            $this->runCommands["mode"] = "--mode={$mode}";
         }
 
         return $mode;
+    }
+
+    public function checkModelInput(): self
+    {
+        $model = $this->option("model");
+        if (!$model) {
+            $model = $this->ask("Please provide a model name");
+        }
+        $this->runCommands["model"] = "--model=" . $model;
+
+        $modelPath = "\\App\\Models\\{$model}";
+        if (class_exists($modelPath)) {
+            $this->model = "\\App\\Models\\$model";
+            return $this;
+        } else {
+            $modelPath = "\\App\\{$model}";
+            if (class_exists($modelPath)) {
+                $this->model = "\\App\\$model";
+                return $this;
+            }
+        }
+        throw new \Exception("Model file not found at namespace \App\Models or \App");
+    }
+
+    public function getModelInstance(): Model
+    {
+        return app($this->model);
     }
 
     public function checkSelectedTableInput(): self
@@ -52,7 +95,7 @@ trait CommandTrait
             $this->selectedTables = explode(',', $selectedTables);
         }
 
-        $this->runCommand["tables"] = "--tables={$selectedTables}";
+        $this->runCommands["tables"] = "--tables={$selectedTables}";
 
         return $this;
     }
@@ -75,18 +118,18 @@ trait CommandTrait
     {
         $whereRawQuery = $this->option("where-raw-query");
         if ($whereRawQuery == null && $this->showPrompt) {
-            $typeLimit = $this->choice("Do you want to use where raw query in seeded data?", [
+            $typeRawQuery = $this->choice("Do you want to use where raw query clause condition?", [
                 1 => "No",
                 2 => "Yes",
             ]);
-            switch ($typeLimit) {
+            switch ($typeRawQuery) {
                 case "Yes":
-                    $whereRawQuery = $this->ask("Please provide the where raw query of data to be seeded");
+                    $whereRawQuery = $this->ask("Please provide the where raw query condition");
                     break;
             }
         }
         if ($whereRawQuery != null) {
-            $this->runCommand["where-raw-query"] = "--where-raw-query={$whereRawQuery}";
+            $this->runCommands["where-raw-query"] = "--where-raw-query='{$whereRawQuery}'";
         }
         $this->whereRawQuery = $whereRawQuery;
         return $this;
@@ -100,7 +143,7 @@ trait CommandTrait
     private function checkWhereInput(): self
     {
         $wheres = $this->option("where");
-        $this->runCommand["where"] = "";
+        $this->runCommands["where"] = "";
         if (count($wheres) == 0 && $this->showPrompt) {
             $wheres = [];
             while (true) {
@@ -122,7 +165,7 @@ trait CommandTrait
         }
         if ($wheres != null) {
             foreach ($wheres as $key => $where) {
-                $this->runCommand["where"] .= ($key > 0 ? " " : "") . "--where='{$where}'";
+                $this->runCommands["where"] .= ($key > 0 ? " " : "") . "--where='{$where}'";
             }
         }
         $wheresFinal = [];
@@ -136,7 +179,7 @@ trait CommandTrait
             $wheresFinal[$key]["value"] = $result[2];
         }
         if (count($wheresFinal) == 0) {
-            unset($this->runCommand["where"]);
+            unset($this->runCommands["where"]);
         }
 
         $this->wheres = $wheresFinal;
@@ -248,7 +291,6 @@ trait CommandTrait
         if (count($whereNotInFinal) == 0) {
             unset($this->runCommands["where-not-in"]);
         }
-
         $this->whereNotIns = $whereNotInFinal;
         return $this;
     }
@@ -273,15 +315,16 @@ trait CommandTrait
             }
         }
         if ($orderBy != null) {
-            $this->runCommand["order-by"] = "--order-by={$orderBy}";
+            $this->runCommands["order-by"] = "--order-by={$orderBy}";
         }
 
         $orderBy = $this->optionToArray($orderBy);
-
-        $this->orderBy = [
-            "column" => $orderBy[0] ?? null,
-            "direction" => $orderBy[1] ?? null,
-        ];
+        if (count($orderBy) == 2) {
+            $this->orderBy = [
+                "column" => $orderBy[0],
+                "direction" => $orderBy[1],
+            ];
+        }
 
         return $this;
     }
@@ -306,7 +349,7 @@ trait CommandTrait
             }
         }
         if ($limit != null) {
-            $this->runCommand["limit"] = "--limit={$limit}";
+            $this->runCommands["limit"] = "--limit={$limit}";
         }
         $this->limit = $limit;
         return $this;
@@ -370,7 +413,7 @@ trait CommandTrait
     private function checkFieldsInput(): self
     {
         if ($this->option('all-fields')) {
-            $this->runCommand["fields"] = "--all-fields";
+            $this->runCommands["fields"] = "--all-fields";
             return [[], []];
         }
         $selectedFields = $this->option("fields");
@@ -391,10 +434,10 @@ trait CommandTrait
             }
         }
         if ($ignoredFields != null) {
-            $this->runCommand["fields"] = "--ignore-fields={$ignoredFields}";
+            $this->runCommands["fields"] = "--ignore-fields={$ignoredFields}";
         }
         if ($selectedFields != null) {
-            $this->runCommand["fields"] = "--fields={$selectedFields}";
+            $this->runCommands["fields"] = "--fields={$selectedFields}";
         }
         $selectedFields = $this->optionToArray($selectedFields);
         $ignoredFields = $this->optionToArray($ignoredFields);
@@ -433,14 +476,75 @@ trait CommandTrait
             }
         }
         if ($outputLocation != null) {
-            $this->runCommand["output"] = "--output={$outputLocation}";
+            $this->runCommands["output"] = "--output={$outputLocation}";
         }
         $this->outputLocation = $outputLocation;
         return $this;
     }
 
+    private function checkRelationInput(): self
+    {
+        if (!$this->option("without-relations")) {
+            $relations = $this->option("relations");
+            if ($relations == null && $this->showPrompt) {
+                $typeOfRelation = $this->choice("Do you want to seed the has-many relation?", [1 => "No", 2 => "Yes"]);
+                switch ($typeOfRelation) {
+                    case "Yes":
+                        $relations = $this->ask("Please provide the has-many relations you want to seed (seperate with comma)");
+                        break;
+                    default:
+                        $relations = "";
+                        break;
+                }
+            }
+            if ($relations != null) {
+                $this->runCommands["relation"] = "--relations={$relations}";
+            }
+            $relations = $this->optionToArray($relations);
+            $this->relations = $relations;
+        }
+        return $this;
+    }
+
+    public function getRelations(): array
+    {
+        return $this->relations;
+    }
+
+    private function checkRelationLimitInput(): self
+    {
+        $limit = $this->option("relations-limit");
+        if ($limit == null && $this->showPrompt) {
+            $typeLimitRelation = $this->choice("Do you want to use limit in relation?", [
+                1 => "No",
+                2 => "Yes",
+            ]);
+            switch ($typeLimitRelation) {
+                case "Yes":
+                    $limit = $this->ask("Please provide the limit of relation data to be seeded");
+                    break;
+            }
+        }
+        if ($limit != null) {
+            $this->runCommands["relations-limit"] = "--relations-limit={$limit}";
+        }
+
+        $this->relationLimits = $limit;
+        return $this;
+    }
+
+    public function getRelationLimits(): ?string
+    {
+        return $this->relationLimits;
+    }
+
     public function getOutputLocation(): ?string
     {
         return $this->outputLocation;
+    }
+
+    public function getDatabaseConnection(): string
+    {
+        return config("database.default");
     }
 }

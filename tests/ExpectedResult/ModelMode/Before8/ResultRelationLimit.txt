@@ -1,5 +1,4 @@
 <?php
-namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +14,7 @@ class TestModelSeeder extends Seeder
     {
         /**
          * Command :
-         * artisan seed:generate TestModel --relations=test_model_childs --relations-limit=1
+         * artisan seed:generate --model-mode --model=TestModel --relations=test_model_childs --relations-limit=1
          *
          */
 

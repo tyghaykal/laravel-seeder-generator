@@ -8,14 +8,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Filesystem\Filesystem;
 use TYGHaykal\LaravelSeedGenerator\Helpers\StringHelper;
 
-class TableCommand extends Command
+class TableCommand
 {
     private Command $parentCommand;
     private Filesystem $files;
 
     public function __construct(Command $parentCommand, Filesystem $files)
     {
-        parent::__construct();
         $this->parentCommand = $parentCommand;
         $this->files = $files;
     }
@@ -27,7 +26,6 @@ class TableCommand extends Command
         foreach ($tables as $table) {
             $this->createSeed($table);
         }
-        //     return false;
     }
 
     public function getTables(?array $selectedTables = []): array
@@ -86,21 +84,70 @@ class TableCommand extends Command
     {
         $data = DB::table($table);
 
-        if ($this->parentCommand->getWhereRawQuery()) {
-            $data = $data->whereRaw($this->parentCommand->getWhereRawQuery());
+        $whereRawQuery = $this->parentCommand->getWhereRawQuery();
+        if ($whereRawQuery) {
+            $data = $data->whereRaw($whereRawQuery);
         }
 
-        if ($this->parentCommand->getWheres()) {
-            foreach ($this->parentCommand->getWheres() as $where) {
+        $wheres = $this->parentCommand->getWheres();
+        if ($wheres) {
+            foreach ($wheres as $where) {
                 $data = $data->where($where["column"], $where["type"], $where["value"]);
             }
         }
-        return $data->get();
+
+        $whereIns = $this->parentCommand->getWhereIns();
+        if ($whereIns) {
+            foreach ($whereIns as $whereIn) {
+                $data = $data->whereIn($whereIn["column"], $whereIn["value"]);
+            }
+        }
+
+        $whereNotIns = $this->parentCommand->getWhereNotIns();
+        if ($whereNotIns) {
+            foreach ($whereNotIns as $whereNotIn) {
+                $data = $data->whereNotIn($whereNotIn["column"], $whereNotIn["value"]);
+            }
+        }
+
+        $selectedIds = $this->parentCommand->getSelectedIds();
+        $ignoredIds = $this->parentCommand->getIgnoredIds();
+        if ($selectedIds) {
+            $data = $data->whereIn("id", $selectedIds);
+        } elseif ($ignoredIds) {
+            $data = $data->whereNotIn("id", $ignoredIds);
+        }
+
+        $selectedFields = $this->parentCommand->getSelectedFields();
+        if ($selectedFields) {
+            $data = $data->select($selectedFields);
+        }
+
+        $ignoredFields = $this->parentCommand->getIgnoredFields();
+        if (count($selectedFields) == 0 && count($ignoredFields) > 0) {
+            $allColumns = DB::connection($this->parentCommand->getDatabaseConnection())
+                ->getSchemaBuilder()
+                ->getColumnListing($table);
+            $data = $data->select(array_diff($allColumns, $ignoredFields));
+        }
+
+        $orderBy = $this->parentCommand->getOrderBy();
+        if ($orderBy) {
+            $data = $data->orderBy($orderBy['column'], $orderBy['direction']);
+        }
+
+        $limit = $this->parentCommand->getLimit();
+        if ($limit) {
+            $data = $data->limit($limit);
+        }
+
+        $tableDatas = $data->get();
+
+        return $tableDatas;
     }
 
     public function createSeed(string $table): mixed
     {
-        //get data
         $tableDatas = $this->getTableData($table);
         $code = "";
         foreach ($tableDatas as $key => $tableData) {
@@ -112,7 +159,8 @@ class TableCommand extends Command
 
         $code = "[\n" . StringHelper::generateIndentation($code, 3) . "\n" . StringHelper::generateIndentation("]", 2);
 
-        return $this->writeSeederFile($code, $table);
+        $outputLocation = $this->parentCommand->getOutputLocation();
+        return $this->writeSeederFile($code, $table, $outputLocation);
     }
 
     private function writeSeederFile(string $code, string $tableName, ?string $outputLocation = null): void
@@ -120,12 +168,10 @@ class TableCommand extends Command
         $isReplace = false;
 
         if ($outputLocation == null) {
-            //set seed class name
             $seedClassName = Str::studly($tableName) . "Seeder";
-
             $seedNamespace = "/Tables";
         } else {
-            if (!$this->parentCommand->oldLaravelVersion) {
+            if (!$this->parentCommand->isOldLaravelVersion()) {
                 $seedNamespace = str_replace("Database\\Seeders\\Tables\\", "", $outputLocation);
                 $seedNamespace = str_replace("Database/Seeders/Tables", "", $outputLocation);
             } else {
@@ -136,7 +182,8 @@ class TableCommand extends Command
             $seedNamespace = str_replace("/", "\\", $seedNamespace);
             $seedNamespace = explode('\\', $seedNamespace);
 
-            $seedClassName = Str::studly($tableName) . "Seeder";
+            $seedClassName = Str::studly($seedNamespace[count($seedNamespace) - 1]) . "Seeder";
+            unset($seedNamespace[count($seedNamespace) - 1]);
 
             //str studly for every $seedNamespace
             foreach ($seedNamespace as $key => $seedNamespaceData) {
@@ -145,14 +192,16 @@ class TableCommand extends Command
             $seedNamespace = '\\' . implode('\\', $seedNamespace);
         }
 
-        // $this->parentCommandString = $this->parentCommand->getCommands();
-        $this->parentCommandString = "php artisan ";
+        if ($this->parentCommand->isOldLaravelVersion()) {
+            $dirSeed = "seeds";
+        } else {
+            $dirSeed = "seeders";
+        }
 
-        $dirSeed = "seeders";
         $stubContent = $this->files->get(__DIR__ . "/../../Stubs/SeedTable.stub");
         $fileContent = str_replace(
             ["{{ class }}", "{{ command }}", "{{ code }}", "{{ table }}"],
-            [$seedClassName, $this->parentCommandString, $code, $tableName],
+            [$seedClassName, $this->parentCommand->getRunCommand(), $code, $tableName],
             $stubContent
         );
 

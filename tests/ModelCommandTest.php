@@ -9,7 +9,7 @@ use TYGHaykal\LaravelSeedGenerator\SeedGeneratorServiceProvider;
 use TYGHaykal\LaravelSeedGenerator\Commands\SeedGeneratorCommand;
 use TYGHaykal\LaravelSeedGenerator\Tests\Database\Seeders\TestModelSeeder;
 
-class SeedGeneratorCommandTest extends TestCase
+class ModelCommandTest extends TestCase
 {
     use RefreshDatabase;
     protected function getPackageProviders($app)
@@ -38,10 +38,16 @@ class SeedGeneratorCommandTest extends TestCase
         $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
     }
 
-    /** @test */
-    public function test_seed_generator_error_no_model_inserted()
+    public function test_seed_generator_error_no_mode_inserted()
     {
         $this->artisan("seed:generate")
+            ->expectsQuestion("Please provide the mode", "")
+            ->assertExitCode(1);
+    }
+
+    public function test_seed_generator_error_no_model_inserted()
+    {
+        $this->artisan("seed:generate --model-mode")
             ->expectsQuestion("Please provide a model name", "")
             ->assertExitCode(1);
     }
@@ -49,10 +55,10 @@ class SeedGeneratorCommandTest extends TestCase
     public function test_seed_generator_error_not_existing_model()
     {
         $model = "ASDZXC";
-        $this->artisan("seed:generate $model")->assertExitCode(1);
+        $this->artisan("seed:generate --model-mode --model=$model")->assertExitCode(1);
 
         // now check with ask method
-        $this->artisan("seed:generate")
+        $this->artisan("seed:generate --model-mode")
             ->expectsQuestion("Please provide a model name", $model)
             ->assertExitCode(1);
     }
@@ -61,7 +67,8 @@ class SeedGeneratorCommandTest extends TestCase
     {
         $model = "TestModel";
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--fields" => "id,name",
             "--ignore-fields" => "id,name",
         ])->assertExitCode(1);
@@ -71,8 +78,10 @@ class SeedGeneratorCommandTest extends TestCase
     {
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
+
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
@@ -81,7 +90,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultAll.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultAll.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -96,11 +105,15 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--show-prompt" => true,
         ])
+            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
                 "Select all",
@@ -123,7 +136,77 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultAll.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultAll.txt")
+        );
+        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        // dd($actualOutput);
+        $this->assertSame($expectedOutput, $actualOutput);
+    }
+
+    public function test_seed_generator_success_on_where_raw_query_clause_inline()
+    {
+        $model = "TestModel";
+        $this->seed(TestModelSeeder::class);
+        $this->artisan("seed:generate", [
+            "--model-mode" => true,
+            "--model" => $model,
+            "--where-raw-query" => "id > 1 AND id < 3",
+        ])->assertExitCode(0);
+
+        // Now we should check if the file was created
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereRawQuery.txt")
+        );
+        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        // dd($actualOutput);
+        $this->assertSame($expectedOutput, $actualOutput);
+    }
+
+    public function test_seed_generator_success_on_where_raw_query_clause_prompt()
+    {
+        if ($this->beforeLaravel7) {
+            $this->markTestSkipped("This test is not supported on Laravel < 8");
+        }
+        $model = "TestModel";
+        $this->seed(TestModelSeeder::class);
+        $this->artisan("seed:generate", [
+            "--model-mode" => true,
+            "--model" => $model,
+            "--show-prompt" => true,
+        ])
+            ->expectsChoice("Do you want to use where raw query clause condition?", "Yes", ["No", "Yes"])
+            ->expectsQuestion("Please provide the where raw query condition", "id > 1 AND id < 3")
+            ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
+                "Select all",
+                "Select some ids",
+                "Ignore some ids",
+            ])
+            ->expectsChoice("Do you want to select or ignore fields?", "Select all", [
+                "Select all",
+                "Select some fields",
+                "Ignore some fields",
+            ])
+            ->expectsChoice("Do you want to seed the has-many relation?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
+            ->assertExitCode(0);
+
+        // Now we should check if the file was created
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereRawQuery.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -135,8 +218,9 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
-            "--where" => ["id,1"],
+            "--model-mode" => true,
+            "--model" => $model,
+            "--where" => ["id,=,1"],
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
@@ -145,7 +229,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultWhere.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhere.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -160,13 +244,20 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--show-prompt" => true,
         ])
+            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where clause conditions?", "Yes", ["No", "Yes"])
-            ->expectsQuestion("Please provide the where clause conditions (seperate with comma for column and value)", "id,1")
+            ->expectsQuestion(
+                "Please provide the where clause conditions (seperate with comma for column, type and value)",
+                "id,=,1"
+            )
             ->expectsChoice("Do you want to add more where clause conditions?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
                 "Select all",
@@ -189,7 +280,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultWhere.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhere.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -201,7 +292,8 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--where-in" => ["id,1,2"],
         ])->assertExitCode(0);
 
@@ -211,7 +303,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultWhereIn.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereIn.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -226,9 +318,11 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--show-prompt" => true,
         ])
+            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where in clause conditions?", "Yes", ["No", "Yes"])
             ->expectsQuestion(
@@ -236,6 +330,8 @@ class SeedGeneratorCommandTest extends TestCase
                 "id,1,2"
             )
             ->expectsChoice("Do you want to add more where in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
                 "Select all",
@@ -258,7 +354,151 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultWhereIn.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereIn.txt")
+        );
+        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        // dd($actualOutput);
+        $this->assertSame($expectedOutput, $actualOutput);
+    }
+
+    public function test_seed_generator_success_on_where_not_in_clause_inline()
+    {
+        $model = "TestModel";
+        $this->seed(TestModelSeeder::class);
+        $this->artisan("seed:generate", [
+            "--model-mode" => true,
+            "--model" => $model,
+            "--where-not-in" => ["id,1,2"],
+        ])->assertExitCode(0);
+
+        // Now we should check if the file was created
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereNotIn.txt")
+        );
+        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        // dd($actualOutput);
+        $this->assertSame($expectedOutput, $actualOutput);
+    }
+
+    public function test_seed_generator_success_on_where_not_in_clause_prompt()
+    {
+        if ($this->beforeLaravel7) {
+            $this->markTestSkipped("This test is not supported on Laravel < 8");
+        }
+        $model = "TestModel";
+        $this->seed(TestModelSeeder::class);
+        $this->artisan("seed:generate", [
+            "--model-mode" => true,
+            "--model" => $model,
+            "--show-prompt" => true,
+        ])
+            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where not in clause conditions?", "Yes", ["No", "Yes"])
+            ->expectsQuestion(
+                "Please provide the where not in clause conditions (seperate with comma for column and value)",
+                "id,1,2"
+            )
+            ->expectsChoice("Do you want to add more where not in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
+                "Select all",
+                "Select some ids",
+                "Ignore some ids",
+            ])
+            ->expectsChoice("Do you want to select or ignore fields?", "Select all", [
+                "Select all",
+                "Select some fields",
+                "Ignore some fields",
+            ])
+            ->expectsChoice("Do you want to seed the has-many relation?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
+            ->assertExitCode(0);
+
+        // Now we should check if the file was created
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereNotIn.txt")
+        );
+        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        // dd($actualOutput);
+        $this->assertSame($expectedOutput, $actualOutput);
+    }
+
+    public function test_seed_generator_success_on_order_by_clause_inline()
+    {
+        $model = "TestModel";
+        $this->seed(TestModelSeeder::class);
+        $this->artisan("seed:generate", [
+            "--model-mode" => true,
+            "--model" => $model,
+            "--order-by" => "id,desc",
+        ])->assertExitCode(0);
+
+        // Now we should check if the file was created
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultOrderBy.txt")
+        );
+        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        // dd($actualOutput);
+        $this->assertSame($expectedOutput, $actualOutput);
+    }
+
+    public function test_seed_generator_success_on_order_by_clause_prompt()
+    {
+        if ($this->beforeLaravel7) {
+            $this->markTestSkipped("This test is not supported on Laravel < 8");
+        }
+        $model = "TestModel";
+        $this->seed(TestModelSeeder::class);
+        $this->artisan("seed:generate", [
+            "--model-mode" => true,
+            "--model" => $model,
+            "--show-prompt" => true,
+        ])
+            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use order by in seeded data?", "Yes", ["No", "Yes"])
+            ->expectsQuestion("Please provide the order by of data to be seeded", "id,desc")
+            ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
+                "Select all",
+                "Select some ids",
+                "Ignore some ids",
+            ])
+            ->expectsChoice("Do you want to select or ignore fields?", "Select all", [
+                "Select all",
+                "Select some fields",
+                "Ignore some fields",
+            ])
+            ->expectsChoice("Do you want to seed the has-many relation?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
+            ->assertExitCode(0);
+
+        // Now we should check if the file was created
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultOrderBy.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -270,7 +510,8 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--limit" => 1,
         ])->assertExitCode(0);
 
@@ -280,7 +521,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultLimit.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultLimit.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -295,11 +536,15 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--show-prompt" => true,
         ])
+            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use limit in seeded data?", "Yes", ["No", "Yes"])
             ->expectsQuestion("Please provide the limit of data to be seeded", 1)
             ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
@@ -323,7 +568,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultLimit.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultLimit.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -335,7 +580,8 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--ids" => "1,2",
         ])->assertExitCode(0);
 
@@ -345,7 +591,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultSelectedIds.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultSelectedIds.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -359,11 +605,15 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--show-prompt" => true,
         ])
+            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to select or ignore ids?", "Select some ids", [
                 "Select all",
@@ -387,7 +637,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultSelectedIds.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultSelectedIds.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -399,7 +649,8 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--ignore-ids" => "1,2",
         ])->assertExitCode(0);
 
@@ -409,7 +660,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultIgnoreIds.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultIgnoreIds.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -424,11 +675,15 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--show-prompt" => true,
         ])
+            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to select or ignore ids?", "Ignore some ids", [
                 "Select all",
@@ -452,7 +707,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultIgnoreIds.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultIgnoreIds.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -464,7 +719,8 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--fields" => "id,name",
         ])->assertExitCode(0);
 
@@ -474,7 +730,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultSelectedField.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultSelectedField.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -489,11 +745,15 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--show-prompt" => true,
         ])
+            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
                 "Select all",
@@ -517,7 +777,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultSelectedField.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultSelectedField.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -529,7 +789,8 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--ignore-fields" => "id,name",
         ])->assertExitCode(0);
 
@@ -539,7 +800,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultIgnoredField.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultIgnoredField.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -553,11 +814,15 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--show-prompt" => true,
         ])
+            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
                 "Select all",
@@ -574,14 +839,13 @@ class SeedGeneratorCommandTest extends TestCase
             ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
             ->assertExitCode(0);
-
         // Now we should check if the file was created
         $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultIgnoredField.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultIgnoredField.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -593,7 +857,8 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--relations" => "test_model_childs",
         ])->assertExitCode(0);
 
@@ -603,7 +868,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultRelation.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultRelation.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -618,11 +883,15 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--show-prompt" => true,
         ])
+            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
                 "Select all",
@@ -646,7 +915,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultRelation.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultRelation.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -658,7 +927,8 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--relations" => "test_model_childs",
             "--relations-limit" => 1,
         ])->assertExitCode(0);
@@ -669,7 +939,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultRelationLimit.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultRelationLimit.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
 
@@ -684,11 +954,15 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--show-prompt" => true,
         ])
+            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
                 "Select all",
@@ -703,7 +977,7 @@ class SeedGeneratorCommandTest extends TestCase
             ->expectsChoice("Do you want to seed the has-many relation?", "Yes", ["No", "Yes"])
             ->expectsQuestion("Please provide the has-many relations you want to seed (seperate with comma)", "test_model_childs")
             ->expectsChoice("Do you want to use limit in relation?", "Yes", ["No", "Yes"])
-            ->expectsQuestion("Please provide the limit of relation data to be seeded", 1)
+            ->expectsQuestion("Please provide the limit of relation data to be seeded", "1")
             ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
             ->assertExitCode(0);
 
@@ -713,7 +987,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultRelationLimit.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultRelationLimit.txt")
         );
         $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
         // dd($actualOutput);
@@ -725,7 +999,8 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--output" => "Should/Be/In/Here/Data",
         ])->assertExitCode(0);
 
@@ -735,7 +1010,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultWithOutputLocation.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWithOutputLocation.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
@@ -754,11 +1029,15 @@ class SeedGeneratorCommandTest extends TestCase
         $model = "TestModel";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "model" => $model,
+            "--model-mode" => true,
+            "--model" => $model,
             "--show-prompt" => true,
         ])
+            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
                 "Select all",
@@ -782,7 +1061,7 @@ class SeedGeneratorCommandTest extends TestCase
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/{$this->folderResult}/ResultWithOutputLocation.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWithOutputLocation.txt")
         );
         $actualOutput = str_replace(
             "\r\n",

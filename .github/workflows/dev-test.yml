@@ -2,9 +2,7 @@ name: CI DEV Test
 
 on:
   push:
-    branches: ["dev**", "dev/**"]
-  pull_request:
-    branches: ["dev**", "dev/**"]
+    branches: ["feat/*"]
 
 jobs:
   test:
