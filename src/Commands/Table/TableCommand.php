@@ -4,6 +4,7 @@ namespace TYGHaykal\LaravelSeedGenerator\Commands\Table;
 use PDO;
 use Illuminate\Support\Str;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Filesystem\Filesystem;
 use TYGHaykal\LaravelSeedGenerator\Helpers\StringHelper;
@@ -18,7 +19,7 @@ class TableCommand
         $this->files = $files;
     }
 
-    public function handle()
+    public function handle(): void
     {
         $tables = self::getTables($this->parentCommand->getSelectedTables());
 
@@ -79,7 +80,7 @@ class TableCommand
         return array_values($tables);
     }
 
-    public function getTableData(string $table)
+    public function getTableData(string $table): Collection
     {
         $data = DB::table($table);
 
@@ -145,7 +146,7 @@ class TableCommand
         return $tableDatas;
     }
 
-    public function createSeed(string $table): mixed
+    public function createSeed(string $table): void
     {
         $tableDatas = $this->getTableData($table);
         $code = "";
@@ -159,7 +160,8 @@ class TableCommand
         $code = "[\n" . StringHelper::generateIndentation($code, 3) . "\n" . StringHelper::generateIndentation("]", 2);
 
         $outputLocation = $this->parentCommand->getOutputLocation();
-        return $this->writeSeederFile($code, $table, $outputLocation);
+
+        $this->writeSeederFile($code, $table, $outputLocation);
     }
 
     private function writeSeederFile(string $code, string $tableName, ?string $outputLocation = null): void
