@@ -23,7 +23,6 @@ class SeedGeneratorCommand extends Command
                                 {--table-mode : Set the resource mode to table} 
                                 {--tables= : Generate seed for selected tables}
                                 {--all-tables : Generate seed for all tables}
-
                                 {--all-ids} 
                                 {--all-fields} 
                                 {--without-relations} 
