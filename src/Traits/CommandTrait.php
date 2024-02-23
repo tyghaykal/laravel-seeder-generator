@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 trait CommandTrait
 {
-    private array $selectedTables = [],
+    private $selectedTables = [],
         $runCommands = [],
         $wheres = [],
         $whereIns = [],
@@ -16,13 +16,12 @@ trait CommandTrait
         $ignoredIds = [],
         $selectedFields = [],
         $ignoredFields = [],
-        $relations = [];
-
-    private ?string $limit = null,
+        $relations = [],
+        $limit = null,
         $outputLocation = null,
-        $rawQuery,
-        $model,
-        $relationLimits;
+        $rawQuery = null,
+        $model = null,
+        $relationLimits = null;
 
     public function isOldLaravelVersion()
     {

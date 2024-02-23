@@ -9,8 +9,7 @@ use TYGHaykal\LaravelSeedGenerator\Helpers\StringHelper;
 
 class ModelCommand
 {
-    private Command $parentCommand;
-    private Filesystem $files;
+    private $parentCommand, $files;
 
     public function __construct(Command $parentCommand, Filesystem $files)
     {

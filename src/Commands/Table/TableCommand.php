@@ -10,10 +10,9 @@ use TYGHaykal\LaravelSeedGenerator\Helpers\StringHelper;
 
 class TableCommand
 {
-    private Command $parentCommand;
-    private Filesystem $files;
+    private $parentCommand, $files;
 
-    public function __construct(Command $parentCommand, Filesystem $files)
+    public function __construct($parentCommand, Filesystem $files)
     {
         $this->parentCommand = $parentCommand;
         $this->files = $files;
