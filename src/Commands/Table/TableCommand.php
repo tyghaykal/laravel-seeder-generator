@@ -168,7 +168,7 @@ class TableCommand
 
         if ($outputLocation == null) {
             $seedClassName = Str::studly($tableName) . "Seeder";
-            $seedNamespace = "/Tables";
+            $seedNamespace = "\Tables";
         } else {
             if (!$this->parentCommand->isOldLaravelVersion()) {
                 $seedNamespace = str_replace("Database\\Seeders\\Tables\\", "", $outputLocation);
@@ -193,16 +193,21 @@ class TableCommand
 
         if ($this->parentCommand->isOldLaravelVersion()) {
             $dirSeed = "seeds";
+            $stubContent = $this->files->get(__DIR__ . "/../../Stubs/SeedTableBefore8.stub");
+            $fileContent = str_replace(
+                ["{{ class }}", "{{ command }}", "{{ code }}", "{{ table }}"],
+                [$seedClassName, $this->parentCommand->getRunCommand(), $code, $tableName],
+                $stubContent
+            );
         } else {
             $dirSeed = "seeders";
+            $stubContent = $this->files->get(__DIR__ . "/../../Stubs/SeedTableAfter8.stub");
+            $fileContent = str_replace(
+                ["{{ namespace }}", "{{ class }}", "{{ command }}", "{{ code }}", "{{ table }}"],
+                [$seedNamespace, $seedClassName, $this->parentCommand->getRunCommand(), $code, $tableName],
+                $stubContent
+            );
         }
-
-        $stubContent = $this->files->get(__DIR__ . "/../../Stubs/SeedTable.stub");
-        $fileContent = str_replace(
-            ["{{ class }}", "{{ command }}", "{{ code }}", "{{ table }}"],
-            [$seedClassName, $this->parentCommand->getRunCommand(), $code, $tableName],
-            $stubContent
-        );
 
         $dirSeed .= $seedNamespace ? $seedNamespace : "";
         $dirSeed = str_replace("\\", "/", $dirSeed);

@@ -177,7 +177,7 @@ class ModelCommand
 
         if (!$this->parentCommand->isOldLaravelVersion()) {
             $dirSeed = "seeders";
-            $stubContent = $this->files->get(__DIR__ . "/../../Stubs/SeedAfter8.stub");
+            $stubContent = $this->files->get(__DIR__ . "/../../Stubs/SeedModelAfter8.stub");
             $fileContent = str_replace(
                 ["{{ namespace }}", "{{ class }}", "{{ command }}", "{{ code }}"],
                 [$seedNamespace, $seedClassName, $command, $code],
@@ -185,7 +185,7 @@ class ModelCommand
             );
         } else {
             $dirSeed = "seeds";
-            $stubContent = $this->files->get(__DIR__ . "/../../Stubs/SeedBefore8.stub");
+            $stubContent = $this->files->get(__DIR__ . "/../../Stubs/SeedModelBefore8.stub");
             $fileContent = str_replace(
                 ["{{ class }}", "{{ command }}", "{{ code }}"],
                 [$seedClassName, $command, $code],

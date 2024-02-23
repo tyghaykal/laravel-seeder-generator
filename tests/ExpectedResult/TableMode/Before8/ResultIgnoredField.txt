@@ -1,0 +1,41 @@
+<?php
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class TestModelsSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+    public function run()
+    {
+        /**
+         * Command :
+         * artisan seed:generate --table-mode --tables=test_models --ignore-fields=id,name
+         *
+         */
+
+        $dataTables = [
+            [
+                'description' => 'description 1',
+                'created_at' => '2023-05-18 11:02:55',
+                'updated_at' => '2023-05-18 11:02:55',
+            ],
+            [
+                'description' => 'description 2',
+                'created_at' => '2023-05-18 11:02:55',
+                'updated_at' => '2023-05-18 11:02:55',
+            ],
+            [
+                'description' => 'description 3',
+                'created_at' => '2023-05-18 11:02:55',
+                'updated_at' => '2023-05-18 11:02:55',
+            ]
+        ];
+        
+        DB::table("test_models")->insert($dataTables);
+    }
+}

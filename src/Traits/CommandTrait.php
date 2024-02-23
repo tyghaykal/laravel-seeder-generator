@@ -87,7 +87,11 @@ trait CommandTrait
         $selectedTables = $this->option('tables');
 
         if (!$selectedTables) {
-            $selectedTables = $this->ask("Please provide the table names? (comma separated)");
+            $selectedTables = $this->ask("Please provide the tables names? (comma separated)");
+        }
+
+        if (!$selectedTables) {
+            throw new \Exception("You must provide at least one table name");
         }
 
         if ($selectedTables) {
@@ -164,7 +168,7 @@ trait CommandTrait
         }
         if ($wheres != null) {
             foreach ($wheres as $key => $where) {
-                $this->runCommands["where"] .= ($key > 0 ? " " : "") . "--where='{$where}'";
+                $this->runCommands["where"] .= ($key > 0 ? " " : "") . "--where={$where}";
             }
         }
         $wheresFinal = [];
