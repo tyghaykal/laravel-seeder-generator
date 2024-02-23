@@ -90,7 +90,7 @@ class SeedGeneratorCommand extends Command
                     throw new \Exception("Mode $mode not supported, only 'table' and 'model' are supported");
             }
         } catch (\Exception $e) {
-            // dd($e);
+            dump($e->getMessage());
             $this->error($e->getMessage());
             return 1;
         }
