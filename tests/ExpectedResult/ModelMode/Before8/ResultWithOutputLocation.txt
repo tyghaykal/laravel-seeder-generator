@@ -3,7 +3,7 @@
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class DataSeeder extends Seeder
+class TestModelSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -14,7 +14,7 @@ class DataSeeder extends Seeder
     {
         /**
          * Command :
-         * artisan seed:generate --model-mode --model=TestModel --output=Should/Be/In/Here/Data
+         * artisan seed:generate --model-mode --models=TestModel --output=Should/Be/In/Here/Data
          *
          */
 

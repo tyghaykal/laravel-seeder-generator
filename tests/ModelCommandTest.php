@@ -23,6 +23,7 @@ class ModelCommandTest extends TestCase
 
         $app["config"]->set("app.aliases", [
             "TestModel" => \App\Models\TestModel::class,
+            "TestModelChild" => \App\Models\TestModelChild::class,
         ]);
     }
 
@@ -48,18 +49,18 @@ class ModelCommandTest extends TestCase
     public function test_seed_generator_error_no_model_inserted()
     {
         $this->artisan("seed:generate --model-mode")
-            ->expectsQuestion("Please provide a model name", "")
+            ->expectsQuestion("Please provide a model name and separate with comma for multiple models", "")
             ->assertExitCode(1);
     }
 
     public function test_seed_generator_error_not_existing_model()
     {
         $model = "ASDZXC";
-        $this->artisan("seed:generate --model-mode --model=$model")->assertExitCode(1);
+        $this->artisan("seed:generate --model-mode --models=$model")->assertExitCode(1);
 
         // now check with ask method
         $this->artisan("seed:generate --model-mode")
-            ->expectsQuestion("Please provide a model name", $model)
+            ->expectsQuestion("Please provide a model name and separate with comma for multiple models", $model)
             ->assertExitCode(1);
     }
 
@@ -68,7 +69,7 @@ class ModelCommandTest extends TestCase
         $model = "TestModel";
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--fields" => "id,name",
             "--ignore-fields" => "id,name",
         ])->assertExitCode(1);
@@ -81,7 +82,7 @@ class ModelCommandTest extends TestCase
 
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
@@ -106,7 +107,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -149,7 +150,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--where-raw-query" => "id > 1 AND id < 3",
         ])->assertExitCode(0);
 
@@ -175,7 +176,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "Yes", ["No", "Yes"])
@@ -219,7 +220,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--where" => ["id,=,1"],
         ])->assertExitCode(0);
 
@@ -245,7 +246,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -293,7 +294,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--where-in" => ["id,1,2"],
         ])->assertExitCode(0);
 
@@ -319,7 +320,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -367,7 +368,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--where-not-in" => ["id,1,2"],
         ])->assertExitCode(0);
 
@@ -393,7 +394,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -441,7 +442,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--order-by" => "id,desc",
         ])->assertExitCode(0);
 
@@ -467,7 +468,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -511,7 +512,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--limit" => 1,
         ])->assertExitCode(0);
 
@@ -537,7 +538,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -581,7 +582,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--ids" => "1,2",
         ])->assertExitCode(0);
 
@@ -606,7 +607,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -650,7 +651,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--ignore-ids" => "1,2",
         ])->assertExitCode(0);
 
@@ -676,7 +677,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -720,7 +721,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--fields" => "id,name",
         ])->assertExitCode(0);
 
@@ -746,7 +747,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -790,7 +791,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--ignore-fields" => "id,name",
         ])->assertExitCode(0);
 
@@ -815,7 +816,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -858,7 +859,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--relations" => "test_model_childs",
         ])->assertExitCode(0);
 
@@ -884,7 +885,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -928,7 +929,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--relations" => "test_model_childs",
             "--relations-limit" => 1,
         ])->assertExitCode(0);
@@ -955,7 +956,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -1000,12 +1001,12 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--output" => "Should/Be/In/Here/Data",
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Should/Be/In/Here/DataSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Should/Be/In/Here/Data/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
@@ -1015,9 +1016,9 @@ class ModelCommandTest extends TestCase
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Should/Be/In/Here/DataSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Should/Be/In/Here/Data/TestModelSeeder.php"))
         );
-
+        // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
 
@@ -1030,7 +1031,7 @@ class ModelCommandTest extends TestCase
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
             "--model-mode" => true,
-            "--model" => $model,
+            "--models" => $model,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -1056,7 +1057,7 @@ class ModelCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Should/Be/In/Here/DataSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Should/Be/In/Here/Data/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
@@ -1066,9 +1067,104 @@ class ModelCommandTest extends TestCase
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Should/Be/In/Here/DataSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Should/Be/In/Here/Data/TestModelSeeder.php"))
         );
         // dd($actualOutput);
+        $this->assertSame($expectedOutput, $actualOutput);
+    }
+
+    public function test_seed_generator_success_on_multiple_models_inline()
+    {
+        $this->seed(TestModelSeeder::class);
+        $this->artisan("seed:generate", [
+            "--model-mode" => true,
+            "--models" => "TestModel,TestModelChild",
+        ])->assertExitCode(0);
+
+        // Now we should check if the file was created
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/MultipleModelResult/TestModelSeeder.txt")
+        );
+        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+
+        $this->assertSame($expectedOutput, $actualOutput);
+
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelChildSeeder.php")));
+
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(
+                __DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/MultipleModelResult/TestModelChildSeeder.txt"
+            )
+        );
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/TestModelChildSeeder.php"))
+        );
+
+        $this->assertSame($expectedOutput, $actualOutput);
+    }
+
+    public function test_seed_generator_success_on_multiple_models_prompt()
+    {
+        $this->seed(TestModelSeeder::class);
+        $this->artisan("seed:generate", [
+            "--model-mode" => true,
+            "--models" => "TestModel,TestModelChild",
+            "--show-prompt" => true,
+        ])
+            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
+            ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
+                "Select all",
+                "Select some ids",
+                "Ignore some ids",
+            ])
+            ->expectsChoice("Do you want to select or ignore fields?", "Select all", [
+                "Select all",
+                "Select some fields",
+                "Ignore some fields",
+            ])
+            ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
+            ->assertExitCode(0);
+
+        // Now we should check if the file was created
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/MultipleModelResult/TestModelSeeder.txt")
+        );
+        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+
+        $this->assertSame($expectedOutput, $actualOutput);
+
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelChildSeeder.php")));
+
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(
+                __DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/MultipleModelResult/TestModelChildSeeder.txt"
+            )
+        );
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/TestModelChildSeeder.php"))
+        );
+
         $this->assertSame($expectedOutput, $actualOutput);
     }
 }

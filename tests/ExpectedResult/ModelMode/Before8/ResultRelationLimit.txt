@@ -14,7 +14,7 @@ class TestModelSeeder extends Seeder
     {
         /**
          * Command :
-         * artisan seed:generate --model-mode --model=TestModel --relations=test_model_childs --relations-limit=1
+         * artisan seed:generate --model-mode --models=TestModel --relations=test_model_childs --relations-limit=1
          *
          */
 

@@ -15,7 +15,7 @@ class TestModelSeeder extends Seeder
     {
         /**
          * Command :
-         * artisan seed:generate --model-mode --model=TestModel --where-raw-query='id > 1 AND id < 3'
+         * artisan seed:generate --model-mode --models=TestModel --where-raw-query='id > 1 AND id < 3'
          *
          */
 

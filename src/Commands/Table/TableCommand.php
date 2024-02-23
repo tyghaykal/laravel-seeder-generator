@@ -32,7 +32,7 @@ class TableCommand
         $databaseType = DB::connection()
             ->getPDO()
             ->getAttribute(PDO::ATTR_DRIVER_NAME);
-        $ignoreTables = ['jobs', 'failed_jobs', 'migrations', 'cache'];
+        $ignoreTables = ['jobs', 'failed_jobs', 'migrations', 'cache', "sqlite_sequence", "sessions"];
 
         switch ($databaseType) {
             case 'mysql':

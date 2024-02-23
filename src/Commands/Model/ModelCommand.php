@@ -19,15 +19,18 @@ class ModelCommand
 
     public function handle()
     {
-        $seedCode = $this->getSeederCode();
+        $models = $this->parentCommand->getModels();
 
-        $this->writeSeederFile($seedCode, $this->parentCommand->getModelInstance(), $this->parentCommand->getOutputLocation());
+        foreach ($models as $model) {
+            $modelInstance = $this->parentCommand->getModelInstance($model);
+            $seedCode = $this->getSeederCode($modelInstance);
+
+            $this->writeSeederFile($seedCode, $modelInstance, $this->parentCommand->getOutputLocation());
+        }
     }
 
-    private function getSeederCode(): string
+    private function getSeederCode(Model $modelInstance): string
     {
-        $modelInstance = $this->parentCommand->getModelInstance();
-
         $selectedIds = $this->parentCommand->getSelectedIds();
         $ignoreIds = $this->parentCommand->getIgnoredIds();
         if (count($selectedIds) > 0) {
@@ -163,8 +166,8 @@ class ModelCommand
             $seedNamespace = str_replace("/", "\\", $seedNamespace);
             $seedNamespace = explode('\\', $seedNamespace);
 
-            $seedClassName = Str::studly($seedNamespace[count($seedNamespace) - 1]) . "Seeder";
-            unset($seedNamespace[count($seedNamespace) - 1]);
+            $seedClassName = class_basename($modelInstance);
+            $seedClassName = Str::studly($seedClassName) . "Seeder";
 
             //str studly for every $seedNamespace
             foreach ($seedNamespace as $key => $seedNamespaceData) {

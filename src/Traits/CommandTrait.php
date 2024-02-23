@@ -3,6 +3,7 @@ namespace TYGHaykal\LaravelSeedGenerator\Traits;
 
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\File;
 
 trait CommandTrait
 {
@@ -20,7 +21,7 @@ trait CommandTrait
         $limit = null,
         $outputLocation = null,
         $rawQuery = null,
-        $model = null,
+        $models = [],
         $relationLimits = null;
 
     public function isOldLaravelVersion()
@@ -57,34 +58,58 @@ trait CommandTrait
 
     public function checkModelInput(): self
     {
-        $model = $this->option("model");
-        if (!$model) {
-            $model = $this->ask("Please provide a model name");
-        }
-        $this->runCommands["model"] = "--model=" . $model;
+        $models = $this->option("models");
 
-        $modelPath = "\\App\\Models\\{$model}";
-        if (class_exists($modelPath)) {
-            $this->model = "\\App\\Models\\$model";
-            return $this;
-        } else {
-            $modelPath = "\\App\\{$model}";
+        if (!$models) {
+            $models = $this->ask("Please provide a model name and separate with comma for multiple models");
+        }
+        $this->runCommands["model"] = "--models=" . $models;
+
+        $models = $this->optionToArray($models);
+        if (count($models) == 0) {
+            throw new \Exception("You must provide at least one model name");
+        }
+
+        foreach ($models as $model) {
+            $modelPath = "\\App\\Models\\{$model}";
+            $modelFound = false;
             if (class_exists($modelPath)) {
-                $this->model = "\\App\\$model";
-                return $this;
+                $this->models[] = "\\App\\Models\\$model";
+                $modelFound = true;
+            } else {
+                $modelPath = "\\App\\{$model}";
+                if (class_exists($modelPath)) {
+                    $this->models[] = "\\App\\$model";
+                    $modelFound = true;
+                }
+            }
+
+            if (!$modelFound) {
+                throw new \Exception("Model file not found at namespace \App\Models or \App");
             }
         }
-        throw new \Exception("Model file not found at namespace \App\Models or \App");
+        return $this;
     }
 
-    public function getModelInstance(): Model
+    public function getModels(): array
     {
-        return app($this->model);
+        return $this->models;
+    }
+
+    public function getModelInstance(string $model): Model
+    {
+        return app($model);
     }
 
     public function checkSelectedTableInput(): self
     {
         $selectedTables = $this->option('tables');
+        $isAllTables = $this->option('all-tables');
+
+        if ($isAllTables) {
+            $this->runCommands["all-tables"] = "--all-tables";
+            return $this;
+        }
 
         if (!$selectedTables) {
             $selectedTables = $this->ask("Please provide the tables names? (comma separated)");
@@ -486,6 +511,10 @@ trait CommandTrait
 
     private function checkRelationInput(): self
     {
+        if (count($this->models) > 1) {
+            $this->info("Multiple models detected, relations will be ignored");
+            return $this;
+        }
         if (!$this->option("without-relations")) {
             $relations = $this->option("relations");
             if ($relations == null && $this->showPrompt) {
@@ -515,6 +544,11 @@ trait CommandTrait
 
     private function checkRelationLimitInput(): self
     {
+        if (count($this->models) > 1) {
+            $this->info("Multiple models detected, relations limit will be ignored");
+            return $this;
+        }
+
         $limit = $this->option("relations-limit");
         if ($limit == null && $this->showPrompt) {
             $typeLimitRelation = $this->choice("Do you want to use limit in relation?", [

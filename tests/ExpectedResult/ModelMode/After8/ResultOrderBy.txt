@@ -15,7 +15,7 @@ class TestModelSeeder extends Seeder
     {
         /**
          * Command :
-         * artisan seed:generate --model-mode --model=TestModel --order-by=id,desc
+         * artisan seed:generate --model-mode --models=TestModel --order-by=id,desc
          *
          */
 

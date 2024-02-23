@@ -14,7 +14,7 @@ class TestModelSeeder extends Seeder
     {
         /**
          * Command :
-         * artisan seed:generate --model-mode --model=TestModel --fields=id,name
+         * artisan seed:generate --model-mode --models=TestModel --fields=id,name
          *
          */
 

@@ -19,7 +19,8 @@ class SeedGeneratorCommand extends Command
                                 {--show-prompt} 
                                 {--mode= : Set the resource mode (table or model)} 
                                 {--model-mode : Set the resource mode to model} 
-                                {--model= : Generate seed for selected model} 
+                                {--all-models : Generate seed for all models} 
+                                {--models= : Generate seed for selected model} 
                                 {--table-mode : Set the resource mode to table} 
                                 {--tables= : Generate seed for selected tables}
                                 {--all-tables : Generate seed for all tables}

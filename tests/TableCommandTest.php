@@ -993,4 +993,94 @@ class TableCommandTest extends TestCase
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
+
+    public function test_seed_generator_success_on_multiple_tables()
+    {
+        $table = "test_models,test_model_childs";
+        $this->seed(TestModelSeeder::class);
+        $this->artisan("seed:generate", [
+            "--table-mode" => true,
+            "--tables" => $table,
+        ])->assertExitCode(0);
+
+        // Now we should check if the file was created
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
+
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(
+                __DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/MultipleTableResults/TestModelsSeeder.txt"
+            )
+        );
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
+        );
+
+        $this->assertSame($expectedOutput, $actualOutput);
+
+        // Now we should check if the file was created
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelChildsSeeder.php")));
+
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(
+                __DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/MultipleTableResults/TestModelChildsSeeder.txt"
+            )
+        );
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelChildsSeeder.php"))
+        );
+
+        $this->assertSame($expectedOutput, $actualOutput);
+    }
+
+    public function test_seed_generator_success_on_all_tables()
+    {
+        $table = "test_models,test_model_childs";
+        $this->seed(TestModelSeeder::class);
+        $this->artisan("seed:generate", [
+            "--table-mode" => true,
+            "--all-tables" => true,
+        ])->assertExitCode(0);
+
+        // Now we should check if the file was created
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
+
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/AllTableResults/TestModelsSeeder.txt")
+        );
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
+        );
+
+        $this->assertSame($expectedOutput, $actualOutput);
+
+        // Now we should check if the file was created
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelChildsSeeder.php")));
+
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(
+                __DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/AllTableResults/TestModelChildsSeeder.txt"
+            )
+        );
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelChildsSeeder.php"))
+        );
+
+        $this->assertSame($expectedOutput, $actualOutput);
+    }
 }
