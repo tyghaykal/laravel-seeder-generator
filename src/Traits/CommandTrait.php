@@ -36,6 +36,11 @@ trait CommandTrait
         return $runCommand;
     }
 
+    public function getUpdateDatabaseSeeder()
+    {
+        return !$this->option("no-seed");
+    }
+
     public function getMode(): string
     {
         $mode = "";

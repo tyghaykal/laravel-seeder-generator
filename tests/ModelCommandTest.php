@@ -37,6 +37,9 @@ class ModelCommandTest extends TestCase
         $this->folderSeeder = version_compare(app()->version(), "8.0.0") >= 0 ? "seeders" : "seeds";
         $this->beforeLaravel7 = version_compare(app()->version(), "7.0.0") < 0;
         $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
+
+        // copy database\DatabaseSeeder.php to orchestra database folder
+        File::copy(__DIR__ . "/database/DatabaseSeeder.php", database_path($this->folderSeeder . "\DatabaseSeeder.php"));
     }
 
     public function test_seed_generator_error_no_mode_inserted()
@@ -86,14 +89,18 @@ class ModelCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultAll.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -132,14 +139,18 @@ class ModelCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultAll.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -155,14 +166,18 @@ class ModelCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereRawQuery.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -202,14 +217,18 @@ class ModelCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereRawQuery.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -225,14 +244,18 @@ class ModelCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhere.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -276,14 +299,18 @@ class ModelCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhere.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -299,14 +326,18 @@ class ModelCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereIn.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -350,14 +381,18 @@ class ModelCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereIn.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -373,14 +408,18 @@ class ModelCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereNotIn.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -424,14 +463,18 @@ class ModelCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereNotIn.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -447,14 +490,18 @@ class ModelCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultOrderBy.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -494,14 +541,18 @@ class ModelCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultOrderBy.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -517,14 +568,18 @@ class ModelCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultLimit.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -564,14 +619,18 @@ class ModelCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultLimit.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -587,14 +646,18 @@ class ModelCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultSelectedIds.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -633,14 +696,18 @@ class ModelCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultSelectedIds.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -656,14 +723,18 @@ class ModelCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultIgnoreIds.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -703,14 +774,18 @@ class ModelCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultIgnoreIds.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -726,14 +801,18 @@ class ModelCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultSelectedField.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -773,14 +852,18 @@ class ModelCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultSelectedField.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -796,14 +879,18 @@ class ModelCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultIgnoredField.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -841,14 +928,18 @@ class ModelCommandTest extends TestCase
             ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
             ->assertExitCode(0);
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultIgnoredField.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -864,14 +955,18 @@ class ModelCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultRelation.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -911,14 +1006,18 @@ class ModelCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultRelation.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -935,14 +1034,18 @@ class ModelCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultRelationLimit.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
 
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -983,14 +1086,18 @@ class ModelCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultRelationLimit.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
@@ -1006,7 +1113,7 @@ class ModelCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Should/Be/In/Here/Data/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/Should/Be/In/Here/Data/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
@@ -1016,7 +1123,7 @@ class ModelCommandTest extends TestCase
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Should/Be/In/Here/Data/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Models/Should/Be/In/Here/Data/TestModelSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -1057,7 +1164,7 @@ class ModelCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Should/Be/In/Here/Data/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/Should/Be/In/Here/Data/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
@@ -1067,7 +1174,7 @@ class ModelCommandTest extends TestCase
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Should/Be/In/Here/Data/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Models/Should/Be/In/Here/Data/TestModelSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -1082,18 +1189,22 @@ class ModelCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/MultipleModelResult/TestModelSeeder.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
 
         $this->assertSame($expectedOutput, $actualOutput);
 
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelChildSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelChildSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
@@ -1105,7 +1216,7 @@ class ModelCommandTest extends TestCase
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/TestModelChildSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelChildSeeder.php"))
         );
 
         $this->assertSame($expectedOutput, $actualOutput);
@@ -1143,18 +1254,22 @@ class ModelCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/MultipleModelResult/TestModelSeeder.txt")
         );
-        $actualOutput = str_replace("\r\n", "\n", file_get_contents(database_path("{$this->folderSeeder}/TestModelSeeder.php")));
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+        );
 
         $this->assertSame($expectedOutput, $actualOutput);
 
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/TestModelChildSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelChildSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
@@ -1166,7 +1281,7 @@ class ModelCommandTest extends TestCase
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/TestModelChildSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelChildSeeder.php"))
         );
 
         $this->assertSame($expectedOutput, $actualOutput);

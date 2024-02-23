@@ -1,5 +1,5 @@
 <?php
-namespace Database\Seeders\Should\Be\In\Here\Data;
+namespace Database\Seeders\Models\Should\Be\In\Here\Data;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
