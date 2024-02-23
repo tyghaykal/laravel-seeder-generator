@@ -447,7 +447,6 @@ trait CommandTrait
 
         $this->selectedFields = $selectedFields;
         $this->ignoredFields = $ignoredFields;
-
         return $this;
     }
 
