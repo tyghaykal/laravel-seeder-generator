@@ -8,13 +8,6 @@ use Illuminate\Support\Str;
 
 class StringHelper
 {
-    /**
-     * Formats an array into a pretty-printed string representation.
-     *
-     * @param array $array The array to be pretty-printed.
-     * @param int $indentationLevel The level of indentation for the output string. Default is 1.
-     * @return string The pretty-printed string representation of the array.
-     */
     public static function prettyPrintArray($array, $indentationLevel = 1): string
     {
         // 4 spaces for each indentation level
@@ -39,13 +32,6 @@ class StringHelper
         return $stringResult;
     }
 
-    /**
-     * Generates an indented string.
-     *
-     * @param string $string The string to be indented.
-     * @param int $indentationLevel The level of indentation. Default is 1.
-     * @return string The indented string.
-     */
     public static function generateIndentation(string $string, int $indentationLevel = 1): string
     {
         $indentation = str_repeat("    ", $indentationLevel);
