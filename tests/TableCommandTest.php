@@ -87,9 +87,7 @@ class TableCommandTest extends TestCase
             "--tables" => $table,
         ])->assertExitCode(0);
 
-        //dump all files under seeds folder
-        dump("ALL FILES", File::allFiles(database_path($this->folderSeeder)));
-
+        dump("ALL FILES", File::allFiles(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
         // Now we should check if the file was created
         $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
