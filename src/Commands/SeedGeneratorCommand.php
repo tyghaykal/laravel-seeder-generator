@@ -23,8 +23,6 @@ class SeedGeneratorCommand extends Command
                                 {--table-mode : Set the resource mode to table} 
                                 {--tables= : Generate seed for selected tables}
                                 {--all-tables : Generate seed for all tables}
-                                {--all-ids} 
-                                {--all-fields} 
                                 {--without-relations} 
                                 {--where-raw-query= : The raw query condition}
                                 {--where=* : The where clause conditions}
@@ -32,8 +30,10 @@ class SeedGeneratorCommand extends Command
                                 {--where-not-in=* : The where in clause conditions}
                                 {--order-by= : Order data to be seeded} 
                                 {--limit= : Limit data to be seeded} 
+                                {--all-ids} 
                                 {--ids= : The ids to be seeded} 
                                 {--ignore-ids= : The ids to be ignored} 
+                                {--all-fields} 
                                 {--fields= : The fields to be seeded} 
                                 {--ignore-fields= : The fields to be ignored} 
                                 {--relations= : The relations to be seeded}
