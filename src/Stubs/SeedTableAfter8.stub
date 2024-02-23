@@ -1,0 +1,26 @@
+<?php
+namespace Database\Seeders{{ namespace }};
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class {{ class }} extends Seeder
+{
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+    public function run()
+    {
+        /**
+         * Command :
+         * {{ command }}
+         *
+         */
+
+        $dataTables = {{ code }};
+        
+        DB::table("{{ table }}")->insert($dataTables);
+    }
+}
