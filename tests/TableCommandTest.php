@@ -9,7 +9,7 @@ use TYGHaykal\LaravelSeedGenerator\SeedGeneratorServiceProvider;
 use TYGHaykal\LaravelSeedGenerator\Commands\SeedGeneratorCommand;
 use TYGHaykal\LaravelSeedGenerator\Tests\Database\Seeders\TestModelSeeder;
 
-class ModelCommandTest extends TestCase
+class TableCommandTest extends TestCase
 {
     use RefreshDatabase;
     protected function getPackageProviders($app)
@@ -22,8 +22,7 @@ class ModelCommandTest extends TestCase
         $app["config"]->set("database.default", "testing");
 
         $app["config"]->set("app.aliases", [
-            "TestModel" => \App\Models\TestModel::class,
-            "TestModelChild" => \App\Models\TestModelChild::class,
+            "test_models" => \App\Models\TestModel::class,
         ]);
     }
 
@@ -51,28 +50,28 @@ class ModelCommandTest extends TestCase
 
     public function test_seed_generator_error_no_model_inserted()
     {
-        $this->artisan("seed:generate --model-mode")
-            ->expectsQuestion("Please provide a model name and separate with comma for multiple models", "")
+        $this->artisan("seed:generate --table-mode")
+            ->expectsQuestion("Please provide the tables names? (comma separated)", "")
             ->assertExitCode(1);
     }
 
-    public function test_seed_generator_error_not_existing_model()
+    public function test_seed_generator_error_not_existing_table()
     {
-        $model = "ASDZXC";
-        $this->artisan("seed:generate --model-mode --models=$model")->assertExitCode(1);
+        $table = "ASDZXC";
+        $this->artisan("seed:generate --table-mode --tables=$table")->assertExitCode(1);
 
         // now check with ask method
-        $this->artisan("seed:generate --model-mode")
-            ->expectsQuestion("Please provide a model name and separate with comma for multiple models", $model)
+        $this->artisan("seed:generate --table-mode")
+            ->expectsQuestion("Please provide the tables names? (comma separated)", $table)
             ->assertExitCode(1);
     }
 
     public function test_seed_generator_error_send_selected_fields_and_ignored_fields_in_same_time()
     {
-        $model = "TestModel";
+        $table = "test_models";
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--fields" => "id,name",
             "--ignore-fields" => "id,name",
         ])->assertExitCode(1);
@@ -80,26 +79,26 @@ class ModelCommandTest extends TestCase
 
     public function test_seed_generator_success_full_with_no_additional_inline()
     {
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
 
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultAll.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultAll.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -110,11 +109,11 @@ class ModelCommandTest extends TestCase
         if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -133,23 +132,21 @@ class ModelCommandTest extends TestCase
                 "Select some fields",
                 "Ignore some fields",
             ])
-            ->expectsChoice("Do you want to seed the has-many relation?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultAll.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultAll.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -157,26 +154,26 @@ class ModelCommandTest extends TestCase
 
     public function test_seed_generator_success_on_where_raw_query_clause_inline()
     {
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--where-raw-query" => "id > 1 AND id < 3",
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereRawQuery.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultWhereRawQuery.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -187,11 +184,11 @@ class ModelCommandTest extends TestCase
         if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "Yes", ["No", "Yes"])
@@ -211,23 +208,21 @@ class ModelCommandTest extends TestCase
                 "Select some fields",
                 "Ignore some fields",
             ])
-            ->expectsChoice("Do you want to seed the has-many relation?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereRawQuery.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultWhereRawQuery.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -235,26 +230,26 @@ class ModelCommandTest extends TestCase
 
     public function test_seed_generator_success_on_where_clause_inline()
     {
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--where" => ["id,=,1"],
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhere.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultWhere.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -265,11 +260,11 @@ class ModelCommandTest extends TestCase
         if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -293,23 +288,21 @@ class ModelCommandTest extends TestCase
                 "Select some fields",
                 "Ignore some fields",
             ])
-            ->expectsChoice("Do you want to seed the has-many relation?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhere.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultWhere.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -317,26 +310,26 @@ class ModelCommandTest extends TestCase
 
     public function test_seed_generator_success_on_where_in_clause_inline()
     {
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--where-in" => ["id,1,2"],
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereIn.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultWhereIn.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -347,11 +340,11 @@ class ModelCommandTest extends TestCase
         if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -375,23 +368,21 @@ class ModelCommandTest extends TestCase
                 "Select some fields",
                 "Ignore some fields",
             ])
-            ->expectsChoice("Do you want to seed the has-many relation?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereIn.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultWhereIn.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -399,26 +390,26 @@ class ModelCommandTest extends TestCase
 
     public function test_seed_generator_success_on_where_not_in_clause_inline()
     {
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--where-not-in" => ["id,1,2"],
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereNotIn.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultWhereNotIn.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -429,11 +420,11 @@ class ModelCommandTest extends TestCase
         if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -457,23 +448,21 @@ class ModelCommandTest extends TestCase
                 "Select some fields",
                 "Ignore some fields",
             ])
-            ->expectsChoice("Do you want to seed the has-many relation?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWhereNotIn.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultWhereNotIn.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -481,26 +470,26 @@ class ModelCommandTest extends TestCase
 
     public function test_seed_generator_success_on_order_by_clause_inline()
     {
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--order-by" => "id,desc",
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultOrderBy.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultOrderBy.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -511,11 +500,11 @@ class ModelCommandTest extends TestCase
         if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -535,23 +524,21 @@ class ModelCommandTest extends TestCase
                 "Select some fields",
                 "Ignore some fields",
             ])
-            ->expectsChoice("Do you want to seed the has-many relation?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultOrderBy.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultOrderBy.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -559,41 +546,41 @@ class ModelCommandTest extends TestCase
 
     public function test_seed_generator_success_on_limit_inline()
     {
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--limit" => 1,
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultLimit.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultLimit.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
 
-    public function test_seed_generator_success_on_limit_clause_prompt()
+    public function test_seed_generator_success_on_limit_prompt()
     {
         if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -613,23 +600,21 @@ class ModelCommandTest extends TestCase
                 "Select some fields",
                 "Ignore some fields",
             ])
-            ->expectsChoice("Do you want to seed the has-many relation?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultLimit.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultLimit.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -637,26 +622,26 @@ class ModelCommandTest extends TestCase
 
     public function test_seed_generator_success_on_selected_id_inline()
     {
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--ids" => "1,2",
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultSelectedIds.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultSelectedIds.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -666,11 +651,11 @@ class ModelCommandTest extends TestCase
         if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -690,23 +675,21 @@ class ModelCommandTest extends TestCase
                 "Select some fields",
                 "Ignore some fields",
             ])
-            ->expectsChoice("Do you want to seed the has-many relation?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultSelectedIds.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultSelectedIds.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -714,26 +697,26 @@ class ModelCommandTest extends TestCase
 
     public function test_seed_generator_success_on_ignored_id_inline()
     {
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--ignore-ids" => "1,2",
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultIgnoreIds.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultIgnoreIds.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -744,11 +727,11 @@ class ModelCommandTest extends TestCase
         if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -768,23 +751,21 @@ class ModelCommandTest extends TestCase
                 "Select some fields",
                 "Ignore some fields",
             ])
-            ->expectsChoice("Do you want to seed the has-many relation?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultIgnoreIds.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultIgnoreIds.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -792,26 +773,26 @@ class ModelCommandTest extends TestCase
 
     public function test_seed_generator_success_on_selected_fields_inline()
     {
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--fields" => "id,name",
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultSelectedField.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultSelectedField.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -822,11 +803,11 @@ class ModelCommandTest extends TestCase
         if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -846,23 +827,21 @@ class ModelCommandTest extends TestCase
                 "Ignore some fields",
             ])
             ->expectsQuestion("Please provide the fields you want to select (seperate with comma)", "id,name")
-            ->expectsChoice("Do you want to seed the has-many relation?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultSelectedField.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultSelectedField.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -870,26 +849,26 @@ class ModelCommandTest extends TestCase
 
     public function test_seed_generator_success_on_ignored_fields_inline()
     {
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--ignore-fields" => "id,name",
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultIgnoredField.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultIgnoredField.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -899,11 +878,11 @@ class ModelCommandTest extends TestCase
         if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -923,180 +902,20 @@ class ModelCommandTest extends TestCase
                 "Ignore some fields",
             ])
             ->expectsQuestion("Please provide the fields you want to ignore (seperate with comma)", "id,name")
-            ->expectsChoice("Do you want to seed the has-many relation?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
             ->assertExitCode(0);
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultIgnoredField.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultIgnoredField.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
-        );
-        // dd($actualOutput);
-        $this->assertSame($expectedOutput, $actualOutput);
-    }
-
-    public function test_seed_generator_success_on_relations_inline()
-    {
-        $model = "TestModel";
-        $this->seed(TestModelSeeder::class);
-        $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
-            "--relations" => "test_model_childs",
-        ])->assertExitCode(0);
-
-        // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
-
-        $expectedOutput = str_replace(
-            "\r\n",
-            "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultRelation.txt")
-        );
-        $actualOutput = str_replace(
-            "\r\n",
-            "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
-        );
-        // dd($actualOutput);
-        $this->assertSame($expectedOutput, $actualOutput);
-    }
-
-    public function test_seed_generator_success_on_relations_prompt()
-    {
-        if ($this->beforeLaravel7) {
-            $this->markTestSkipped("This test is not supported on Laravel < 8");
-        }
-        $model = "TestModel";
-        $this->seed(TestModelSeeder::class);
-        $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
-            "--show-prompt" => true,
-        ])
-            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
-                "Select all",
-                "Select some ids",
-                "Ignore some ids",
-            ])
-            ->expectsChoice("Do you want to select or ignore fields?", "Select all", [
-                "Select all",
-                "Select some fields",
-                "Ignore some fields",
-            ])
-            ->expectsChoice("Do you want to seed the has-many relation?", "Yes", ["No", "Yes"])
-            ->expectsQuestion("Please provide the has-many relations you want to seed (seperate with comma)", "test_model_childs")
-            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
-            ->assertExitCode(0);
-
-        // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
-
-        $expectedOutput = str_replace(
-            "\r\n",
-            "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultRelation.txt")
-        );
-        $actualOutput = str_replace(
-            "\r\n",
-            "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
-        );
-        // dd($actualOutput);
-        $this->assertSame($expectedOutput, $actualOutput);
-    }
-
-    public function test_seed_generator_success_on_relations_limit_inline()
-    {
-        $model = "TestModel";
-        $this->seed(TestModelSeeder::class);
-        $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
-            "--relations" => "test_model_childs",
-            "--relations-limit" => 1,
-        ])->assertExitCode(0);
-
-        // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
-
-        $expectedOutput = str_replace(
-            "\r\n",
-            "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultRelationLimit.txt")
-        );
-        $actualOutput = str_replace(
-            "\r\n",
-            "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
-        );
-
-        $this->assertSame($expectedOutput, $actualOutput);
-    }
-
-    public function test_seed_generator_success_on_relations_limit_prompt()
-    {
-        if ($this->beforeLaravel7) {
-            $this->markTestSkipped("This test is not supported on Laravel < 8");
-        }
-        $model = "TestModel";
-        $this->seed(TestModelSeeder::class);
-        $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
-            "--show-prompt" => true,
-        ])
-            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
-                "Select all",
-                "Select some ids",
-                "Ignore some ids",
-            ])
-            ->expectsChoice("Do you want to select or ignore fields?", "Select all", [
-                "Select all",
-                "Select some fields",
-                "Ignore some fields",
-            ])
-            ->expectsChoice("Do you want to seed the has-many relation?", "Yes", ["No", "Yes"])
-            ->expectsQuestion("Please provide the has-many relations you want to seed (seperate with comma)", "test_model_childs")
-            ->expectsChoice("Do you want to use limit in relation?", "Yes", ["No", "Yes"])
-            ->expectsQuestion("Please provide the limit of relation data to be seeded", "1")
-            ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
-            ->assertExitCode(0);
-
-        // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
-
-        $expectedOutput = str_replace(
-            "\r\n",
-            "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultRelationLimit.txt")
-        );
-        $actualOutput = str_replace(
-            "\r\n",
-            "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
@@ -1104,28 +923,30 @@ class ModelCommandTest extends TestCase
 
     public function test_seed_generator_success_on_output_file_location_inline()
     {
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--output" => "Should/Be/In/Here/Data",
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/Should/Be/In/Here/Data/TestModelSeeder.php")));
+        $this->assertTrue(
+            File::exists(database_path("{$this->folderSeeder}/Tables/Should/Be/In/Here/Data/TestModelsSeeder.php"))
+        );
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWithOutputLocation.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultWithOutputLocation.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/Should/Be/In/Here/Data/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/Should/Be/In/Here/Data/TestModelsSeeder.php"))
         );
-        // dd($actualOutput);
+
         $this->assertSame($expectedOutput, $actualOutput);
     }
 
@@ -1134,11 +955,11 @@ class ModelCommandTest extends TestCase
         if ($this->beforeLaravel7) {
             $this->markTestSkipped("This test is not supported on Laravel < 8");
         }
-        $model = "TestModel";
+        $table = "test_models";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => $model,
+            "--table-mode" => true,
+            "--tables" => $table,
             "--show-prompt" => true,
         ])
             ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
@@ -1157,131 +978,114 @@ class ModelCommandTest extends TestCase
                 "Select some fields",
                 "Ignore some fields",
             ])
-            ->expectsChoice("Do you want to seed the has-many relation?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use limit in relation?", "No", ["No", "Yes"])
             ->expectsChoice("Do you want to change the output location?", "Yes", ["No", "Yes"])
             ->expectsQuestion("Please provide the output location", "Should/Be/In/Here/Data")
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/Should/Be/In/Here/Data/TestModelSeeder.php")));
+        $this->assertTrue(
+            File::exists(database_path("{$this->folderSeeder}/Tables/Should/Be/In/Here/Data/TestModelsSeeder.php"))
+        );
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/ResultWithOutputLocation.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/ResultWithOutputLocation.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/Should/Be/In/Here/Data/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/Should/Be/In/Here/Data/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
     }
 
-    public function test_seed_generator_success_on_multiple_models_inline()
+    public function test_seed_generator_success_on_multiple_tables()
     {
+        $table = "test_models,test_model_childs";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => "TestModel,TestModelChild",
+            "--table-mode" => true,
+            "--tables" => $table,
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
-
-        $expectedOutput = str_replace(
-            "\r\n",
-            "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/MultipleModelResult/TestModelSeeder.txt")
-        );
-        $actualOutput = str_replace(
-            "\r\n",
-            "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
-        );
-
-        $this->assertSame($expectedOutput, $actualOutput);
-
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelChildSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(
-                __DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/MultipleModelResult/TestModelChildSeeder.txt"
+                __DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/MultipleTableResults/TestModelsSeeder.txt"
             )
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelChildSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
+        );
+
+        $this->assertSame($expectedOutput, $actualOutput);
+
+        // Now we should check if the file was created
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelChildsSeeder.php")));
+
+        $expectedOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(
+                __DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/MultipleTableResults/TestModelChildsSeeder.txt"
+            )
+        );
+        $actualOutput = str_replace(
+            "\r\n",
+            "\n",
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelChildsSeeder.php"))
         );
 
         $this->assertSame($expectedOutput, $actualOutput);
     }
 
-    public function test_seed_generator_success_on_multiple_models_prompt()
+    public function test_seed_generator_success_on_all_tables()
     {
-        if ($this->beforeLaravel7) {
-            $this->markTestSkipped("This test is not supported on Laravel < 8");
-        }
-
+        $table = "test_models,test_model_childs";
         $this->seed(TestModelSeeder::class);
         $this->artisan("seed:generate", [
-            "--model-mode" => true,
-            "--models" => "TestModel,TestModelChild",
-            "--show-prompt" => true,
-        ])
-            ->expectsChoice("Do you want to use where raw query clause condition?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use where clause conditions?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use where in clause conditions?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use where not in clause conditions?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use order by in seeded data?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to use limit in seeded data?", "No", ["No", "Yes"])
-            ->expectsChoice("Do you want to select or ignore ids?", "Select all", [
-                "Select all",
-                "Select some ids",
-                "Ignore some ids",
-            ])
-            ->expectsChoice("Do you want to select or ignore fields?", "Select all", [
-                "Select all",
-                "Select some fields",
-                "Ignore some fields",
-            ])
-            ->expectsChoice("Do you want to change the output location?", "No", ["No", "Yes"])
-            ->assertExitCode(0);
+            "--table-mode" => true,
+            "--all-tables" => true,
+        ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php")));
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(__DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/MultipleModelResult/TestModelSeeder.txt")
+            file_get_contents(__DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/AllTableResults/TestModelsSeeder.txt")
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelsSeeder.php"))
         );
 
         $this->assertSame($expectedOutput, $actualOutput);
 
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Models/TestModelChildSeeder.php")));
+        // Now we should check if the file was created
+        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Tables/TestModelChildsSeeder.php")));
 
         $expectedOutput = str_replace(
             "\r\n",
             "\n",
             file_get_contents(
-                __DIR__ . "/ExpectedResult/ModelMode/{$this->folderResult}/MultipleModelResult/TestModelChildSeeder.txt"
+                __DIR__ . "/ExpectedResult/TableMode/{$this->folderResult}/AllTableResults/TestModelChildsSeeder.txt"
             )
         );
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Models/TestModelChildSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/TestModelChildsSeeder.php"))
         );
 
         $this->assertSame($expectedOutput, $actualOutput);

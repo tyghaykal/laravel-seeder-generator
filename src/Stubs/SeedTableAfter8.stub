@@ -19,7 +19,8 @@ class {{ class }} extends Seeder
          *
          */
 
+        $dataTables = {{ code }};
         
-        {{ code }}
+        DB::table("{{ table }}")->insert($dataTables);
     }
 }
