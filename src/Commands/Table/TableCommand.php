@@ -3,10 +3,9 @@ namespace TYGHaykal\LaravelSeedGenerator\Commands\Table;
 
 use PDO;
 use Illuminate\Support\Str;
-use Illuminate\Console\Command;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Collection;
 use TYGHaykal\LaravelSeedGenerator\Helpers\StringHelper;
 
 class TableCommand
