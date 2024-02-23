@@ -1,10 +1,10 @@
 <?php
-namespace Database\Seeders\Should\Be\In\Here;
+namespace Database\Seeders\Tables\Should\Be\In\Here\Data;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class DataSeeder extends Seeder
+class TestModelsSeeder extends Seeder
 {
     /**
      * Run the database seeds.

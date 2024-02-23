@@ -2,6 +2,7 @@
 namespace TYGHaykal\LaravelSeedGenerator\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Schema;
@@ -40,6 +41,7 @@ class SeedGeneratorCommand extends Command
                                 {--relations= : The relations to be seeded}
                                 {--relations-limit= : Limit relation data to be seeded}
                                 {--output= : Output file will be located on this path} 
+                                {--no-seed : Skip update the database seeder file}
                                 ";
 
     protected $description = "Generate a seed file from a model";
@@ -47,7 +49,7 @@ class SeedGeneratorCommand extends Command
         $commands = [],
         $showPrompt = false;
 
-    public function handle(Filesystem $files)
+    public function handle(Filesystem $files, Repository $config)
     {
         try {
             $this->showPrompt = $this->option("show-prompt");
@@ -66,7 +68,7 @@ class SeedGeneratorCommand extends Command
                         ->checkFieldsInput()
                         ->checkOutputLocationInput();
 
-                    return (new TableCommand($this, $files))->handle();
+                    return (new TableCommand($this, $files, $config))->handle();
 
                 case 'model':
                     $this->checkModelInput()
@@ -82,13 +84,12 @@ class SeedGeneratorCommand extends Command
                         ->checkRelationLimitInput()
                         ->checkOutputLocationInput();
 
-                    return (new ModelCommand($this, $files))->handle();
+                    return (new ModelCommand($this, $files, $config))->handle();
 
                 default:
                     throw new \Exception("Mode $mode not supported, only 'table' and 'model' are supported");
             }
         } catch (\Exception $e) {
-            // dd($e);
             $this->error($e->getMessage());
             return 1;
         }

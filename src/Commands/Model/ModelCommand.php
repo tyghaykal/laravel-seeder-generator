@@ -3,29 +3,40 @@ namespace TYGHaykal\LaravelSeedGenerator\Commands\Model;
 
 use Illuminate\Support\Str;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Model;
+use TYGHaykal\LaravelSeedGenerator\Helpers\SeederHelper;
 use TYGHaykal\LaravelSeedGenerator\Helpers\StringHelper;
 
 class ModelCommand
 {
-    private $parentCommand, $files;
+    private $parentCommand, $files, $config;
 
-    public function __construct(Command $parentCommand, Filesystem $files)
+    public function __construct(Command $parentCommand, Filesystem $files, Repository $config)
     {
         $this->parentCommand = $parentCommand;
         $this->files = $files;
+        $this->config = $config;
     }
 
     public function handle()
     {
         $models = $this->parentCommand->getModels();
-
+        $updateDatabaseSeeder = $this->parentCommand->getUpdateDatabaseSeeder();
         foreach ($models as $model) {
             $modelInstance = $this->parentCommand->getModelInstance($model);
             $seedCode = $this->getSeederCode($modelInstance);
 
-            $this->writeSeederFile($seedCode, $modelInstance, $this->parentCommand->getOutputLocation());
+            $seedClassName = $this->writeSeederFile($seedCode, $modelInstance, $this->parentCommand->getOutputLocation());
+
+            if ($updateDatabaseSeeder) {
+                SeederHelper::updateDatabaseSeeder($this->files, $seedClassName);
+            }
+        }
+
+        if ($updateDatabaseSeeder) {
+            $this->parentCommand->info("DatabaseSeeder file updated");
         }
     }
 
@@ -33,6 +44,10 @@ class ModelCommand
     {
         $selectedIds = $this->parentCommand->getSelectedIds();
         $ignoreIds = $this->parentCommand->getIgnoredIds();
+
+        $databaseConnection = $this->config->get("seed-generator.database_connection");
+        $modelInstance = $modelInstance->on($databaseConnection);
+
         if (count($selectedIds) > 0) {
             $modelInstance = $modelInstance->whereIn("id", $selectedIds);
         } elseif (count($ignoreIds) > 0) {
@@ -141,20 +156,25 @@ class ModelCommand
         return $code;
     }
 
-    private function writeSeederFile(string $code, Model $modelInstance, ?string $outputLocation = null): void
+    private function writeSeederFile(string $code, Model $modelInstance, ?string $outputLocation = null): string
     {
         $isReplace = false;
+        $prefix = $this->config->get("seed-generator.prefix");
+        $suffix = $this->config->get("seed-generator.suffix");
+        $exportNamespace = $this->config->get("seed-generator.export_namespace");
+        $exportModelNamespace = $this->config->get("seed-generator.export_model_namespace");
 
         if ($outputLocation == null) {
             //set seed class name
             $seedClassName = class_basename($modelInstance);
-            $seedClassName = Str::studly($seedClassName) . "Seeder";
+            $seedClassName = Str::studly($prefix . $seedClassName . $suffix);
 
             //set seed namespace
             $seedNamespace = new \ReflectionClass($modelInstance);
             $seedNamespace = $seedNamespace->getNamespaceName();
-            $seedNamespace = str_replace("App\\Models", "", $seedNamespace);
+            $seedNamespace = $exportNamespace . $exportModelNamespace . str_replace("App\\Models", "", $seedNamespace);
         } else {
+            $outputLocation = $exportNamespace . $exportModelNamespace . "/" . $outputLocation;
             if (!$this->parentCommand->isOldLaravelVersion()) {
                 $seedNamespace = str_replace("Database\\Seeders", "", $outputLocation);
                 $seedNamespace = str_replace("Database/Seeders", "", $outputLocation);
@@ -164,22 +184,14 @@ class ModelCommand
             }
 
             $seedNamespace = str_replace("/", "\\", $seedNamespace);
-            $seedNamespace = explode('\\', $seedNamespace);
 
             $seedClassName = class_basename($modelInstance);
-            $seedClassName = Str::studly($seedClassName) . "Seeder";
-
-            //str studly for every $seedNamespace
-            foreach ($seedNamespace as $key => $seedNamespaceData) {
-                $seedNamespace[$key] = Str::studly($seedNamespaceData);
-            }
-            $seedNamespace = '\\' . implode('\\', $seedNamespace);
+            $seedClassName = Str::studly($prefix . $seedClassName . $suffix);
         }
 
         $command = $this->parentCommand->getRunCommand();
 
         if (!$this->parentCommand->isOldLaravelVersion()) {
-            $dirSeed = "seeders";
             $stubContent = $this->files->get(__DIR__ . "/../../Stubs/SeedModelAfter8.stub");
             $fileContent = str_replace(
                 ["{{ namespace }}", "{{ class }}", "{{ command }}", "{{ code }}"],
@@ -187,7 +199,6 @@ class ModelCommand
                 $stubContent
             );
         } else {
-            $dirSeed = "seeds";
             $stubContent = $this->files->get(__DIR__ . "/../../Stubs/SeedModelBefore8.stub");
             $fileContent = str_replace(
                 ["{{ class }}", "{{ command }}", "{{ code }}"],
@@ -196,25 +207,28 @@ class ModelCommand
             );
         }
 
-        $dirSeed .= $seedNamespace ? $seedNamespace : "";
+        $dirSeed = $seedNamespace ? $seedNamespace : "";
+        $dirSeed = SeederHelper::lowerCaseNamespace($dirSeed);
         $dirSeed = str_replace("\\", "/", $dirSeed);
         $dirSeedExploded = preg_split("/[\\\\\/]/", $dirSeed);
         $dirSeedCreation = "";
         foreach ($dirSeedExploded as $key => $dirSeedExplodedData) {
             $dirSeedCreation .= ($key > 0 ? "/" : "") . $dirSeedExplodedData;
-            if (!$this->files->exists(database_path($dirSeedCreation))) {
-                $this->files->makeDirectory(database_path($dirSeedCreation));
+            if (!$this->files->exists(base_path($dirSeedCreation))) {
+                $this->files->makeDirectory(base_path($dirSeedCreation));
             }
         }
 
         //get $modelInstance namespace
-        $filePath = database_path("{$dirSeed}" . ("/" . $seedClassName) . ".php");
+        $filePath = base_path("{$dirSeed}" . ("/" . $seedClassName) . ".php");
         if ($this->files->exists($filePath)) {
             $isReplace = true;
             $this->files->delete($filePath);
         }
-        $this->files->put($filePath, $fileContent);
 
+        $this->files->put($filePath, $fileContent);
         $this->parentCommand->info(($isReplace ? "Seed file replaced" : "Seed file created") . " : {$filePath}");
+
+        return $seedNamespace . $seedClassName;
     }
 }

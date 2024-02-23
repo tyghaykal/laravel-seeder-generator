@@ -1,35 +1,49 @@
 <?php
 namespace TYGHaykal\LaravelSeedGenerator\Commands\Table;
 
+use Illuminate\Contracts\Config\Repository;
 use PDO;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
+use TYGHaykal\LaravelSeedGenerator\Helpers\SeederHelper;
 use TYGHaykal\LaravelSeedGenerator\Helpers\StringHelper;
 
 class TableCommand
 {
-    private $parentCommand, $files;
+    private $parentCommand, $files, $config;
 
-    public function __construct($parentCommand, Filesystem $files)
+    public function __construct($parentCommand, Filesystem $files, Repository $config)
     {
         $this->parentCommand = $parentCommand;
         $this->files = $files;
+        $this->config = $config;
     }
 
     public function handle(): void
     {
         $tables = self::getTables($this->parentCommand->getSelectedTables());
+        $updateDatabaseSeeder = $this->parentCommand->getUpdateDatabaseSeeder();
 
         foreach ($tables as $table) {
-            $this->createSeed($table);
+            $seedClassName = $this->createSeed($table);
+
+            if ($updateDatabaseSeeder) {
+                SeederHelper::updateDatabaseSeeder($this->files, $seedClassName);
+            }
+        }
+
+        if ($updateDatabaseSeeder) {
+            $this->parentCommand->info("DatabaseSeeder file updated");
         }
     }
 
     public function getTables(?array $selectedTables = []): array
     {
-        $databaseType = DB::connection()
+        $databaseConnection = $this->config->get("seed-generator.database_connection");
+
+        $databaseType = DB::connection($databaseConnection)
             ->getPDO()
             ->getAttribute(PDO::ATTR_DRIVER_NAME);
         $ignoreTables = ['jobs', 'failed_jobs', 'migrations', 'cache', "sqlite_sequence", "sessions"];
@@ -37,23 +51,23 @@ class TableCommand
         switch ($databaseType) {
             case 'mysql':
                 $query = 'SHOW TABLES';
-                $tables = array_map('current', DB::select($query));
+                $tables = array_map('current', DB::connection($databaseConnection)->select($query));
                 break;
 
             case 'pgsql':
                 $query = "SELECT table_name FROM information_schema.tables WHERE table_schema='public'";
-                $tables = array_column(DB::select($query), 'table_name');
+                $tables = array_column(DB::connection($databaseConnection)->select($query), 'table_name');
                 break;
 
             case 'sqlite':
                 $query = "SELECT name FROM sqlite_master WHERE type='table'";
-                $tables = array_column(DB::select($query), 'name');
+                $tables = array_column(DB::connection($databaseConnection)->select($query), 'name');
                 break;
 
             case 'sqlsrv':
                 $query =
                     "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_catalog=DATABASE()";
-                $tables = array_column(DB::select($query), 'table_name');
+                $tables = array_column(DB::connection($databaseConnection)->select($query), 'table_name');
                 break;
 
             default:
@@ -81,7 +95,8 @@ class TableCommand
 
     public function getTableData(string $table): Collection
     {
-        $data = DB::table($table);
+        $databaseConnection = $this->config->get("seed-generator.database_connection");
+        $data = DB::connection($databaseConnection)->table($table);
 
         $whereRawQuery = $this->parentCommand->getWhereRawQuery();
         if ($whereRawQuery) {
@@ -145,7 +160,7 @@ class TableCommand
         return $tableDatas;
     }
 
-    public function createSeed(string $table): void
+    public function createSeed(string $table): string
     {
         $tableDatas = $this->getTableData($table);
         $code = "";
@@ -160,17 +175,22 @@ class TableCommand
 
         $outputLocation = $this->parentCommand->getOutputLocation();
 
-        $this->writeSeederFile($code, $table, $outputLocation);
+        return $this->writeSeederFile($code, $table, $outputLocation);
     }
 
-    private function writeSeederFile(string $code, string $tableName, ?string $outputLocation = null): void
+    private function writeSeederFile(string $code, string $tableName, ?string $outputLocation = null): string
     {
         $isReplace = false;
+        $prefix = $this->config->get("seed-generator.prefix");
+        $suffix = $this->config->get("seed-generator.suffix");
+        $exportNamespace = $this->config->get("seed-generator.export_namespace");
+        $exportTableNamespace = $this->config->get("seed-generator.export_table_namespace");
 
         if ($outputLocation == null) {
-            $seedClassName = Str::studly($tableName) . "Seeder";
-            $seedNamespace = "\Tables";
+            $seedClassName = Str::studly($prefix . $tableName . $suffix);
+            $seedNamespace = $exportNamespace . $exportTableNamespace;
         } else {
+            $outputLocation = $exportNamespace . $exportTableNamespace . "/" . $outputLocation;
             if (!$this->parentCommand->isOldLaravelVersion()) {
                 $seedNamespace = str_replace("Database\\Seeders\\Tables\\", "", $outputLocation);
                 $seedNamespace = str_replace("Database/Seeders/Tables", "", $outputLocation);
@@ -178,22 +198,12 @@ class TableCommand
                 $seedNamespace = str_replace("Database\\Seeds\\Tables", "", $outputLocation);
                 $seedNamespace = str_replace("Database/Seeds/Tables", "", $outputLocation);
             }
-
             $seedNamespace = str_replace("/", "\\", $seedNamespace);
-            $seedNamespace = explode('\\', $seedNamespace);
 
-            $seedClassName = Str::studly($seedNamespace[count($seedNamespace) - 1]) . "Seeder";
-            unset($seedNamespace[count($seedNamespace) - 1]);
-
-            //str studly for every $seedNamespace
-            foreach ($seedNamespace as $key => $seedNamespaceData) {
-                $seedNamespace[$key] = Str::studly($seedNamespaceData);
-            }
-            $seedNamespace = '\\' . implode('\\', $seedNamespace);
+            $seedClassName = Str::studly($prefix . $tableName . $suffix);
         }
 
         if ($this->parentCommand->isOldLaravelVersion()) {
-            $dirSeed = "seeds";
             $stubContent = $this->files->get(__DIR__ . "/../../Stubs/SeedTableBefore8.stub");
             $fileContent = str_replace(
                 ["{{ class }}", "{{ command }}", "{{ code }}", "{{ table }}"],
@@ -201,7 +211,6 @@ class TableCommand
                 $stubContent
             );
         } else {
-            $dirSeed = "seeders";
             $stubContent = $this->files->get(__DIR__ . "/../../Stubs/SeedTableAfter8.stub");
             $fileContent = str_replace(
                 ["{{ namespace }}", "{{ class }}", "{{ command }}", "{{ code }}", "{{ table }}"],
@@ -210,18 +219,20 @@ class TableCommand
             );
         }
 
-        $dirSeed .= $seedNamespace ? $seedNamespace : "";
+        $dirSeed = $seedNamespace ? $seedNamespace : "";
+        $dirSeed = SeederHelper::lowerCaseNamespace($dirSeed);
         $dirSeed = str_replace("\\", "/", $dirSeed);
         $dirSeedExploded = preg_split("/[\\\\\/]/", $dirSeed);
         $dirSeedCreation = "";
+
         foreach ($dirSeedExploded as $key => $dirSeedExplodedData) {
             $dirSeedCreation .= ($key > 0 ? "/" : "") . $dirSeedExplodedData;
-            if (!$this->files->exists(database_path($dirSeedCreation))) {
-                $this->files->makeDirectory(database_path($dirSeedCreation));
+            if (!$this->files->exists(base_path($dirSeedCreation))) {
+                $this->files->makeDirectory(base_path($dirSeedCreation));
             }
         }
         //get $modelInstance namespace
-        $filePath = database_path("{$dirSeed}" . ("/" . $seedClassName) . ".php");
+        $filePath = base_path("{$dirSeed}" . ("/" . $seedClassName) . ".php");
         if ($this->files->exists($filePath)) {
             $isReplace = true;
             $this->files->delete($filePath);
@@ -229,5 +240,7 @@ class TableCommand
         $this->files->put($filePath, $fileContent);
 
         $this->parentCommand->info(($isReplace ? "Seed file replaced" : "Seed file created") . " : {$filePath}");
+
+        return $seedNamespace . $seedClassName;
     }
 }

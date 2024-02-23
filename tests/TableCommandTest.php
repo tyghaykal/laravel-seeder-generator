@@ -36,6 +36,9 @@ class TableCommandTest extends TestCase
         $this->folderSeeder = version_compare(app()->version(), "8.0.0") >= 0 ? "seeders" : "seeds";
         $this->beforeLaravel7 = version_compare(app()->version(), "7.0.0") < 0;
         $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
+
+        // copy database\DatabaseSeeder.php to orchestra database folder
+        File::copy(__DIR__ . "/database/DatabaseSeeder.php", database_path($this->folderSeeder . "/DatabaseSeeder.php"));
     }
 
     public function test_seed_generator_error_no_mode_inserted()
@@ -929,7 +932,9 @@ class TableCommandTest extends TestCase
         ])->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Should/Be/In/Here/DataSeeder.php")));
+        $this->assertTrue(
+            File::exists(database_path("{$this->folderSeeder}/Tables/Should/Be/In/Here/Data/TestModelsSeeder.php"))
+        );
 
         $expectedOutput = str_replace(
             "\r\n",
@@ -939,7 +944,7 @@ class TableCommandTest extends TestCase
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Should/Be/In/Here/DataSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/Should/Be/In/Here/Data/TestModelsSeeder.php"))
         );
 
         $this->assertSame($expectedOutput, $actualOutput);
@@ -978,7 +983,9 @@ class TableCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Now we should check if the file was created
-        $this->assertTrue(File::exists(database_path("{$this->folderSeeder}/Should/Be/In/Here/DataSeeder.php")));
+        $this->assertTrue(
+            File::exists(database_path("{$this->folderSeeder}/Tables/Should/Be/In/Here/Data/TestModelsSeeder.php"))
+        );
 
         $expectedOutput = str_replace(
             "\r\n",
@@ -988,7 +995,7 @@ class TableCommandTest extends TestCase
         $actualOutput = str_replace(
             "\r\n",
             "\n",
-            file_get_contents(database_path("{$this->folderSeeder}/Should/Be/In/Here/DataSeeder.php"))
+            file_get_contents(database_path("{$this->folderSeeder}/Tables/Should/Be/In/Here/Data/TestModelsSeeder.php"))
         );
         // dd($actualOutput);
         $this->assertSame($expectedOutput, $actualOutput);
