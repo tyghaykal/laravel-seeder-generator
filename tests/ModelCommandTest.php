@@ -37,8 +37,11 @@ class ModelCommandTest extends TestCase
         $this->folderSeeder = version_compare(app()->version(), "8.0.0") >= 0 ? "seeders" : "seeds";
         $this->beforeLaravel7 = version_compare(app()->version(), "7.0.0") < 0;
         $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
-
         // copy database\DatabaseSeeder.php to orchestra database folder
+        if (!File::exists(database_path($this->folderSeeder))) {
+            File::makeDirectory(database_path($this->folderSeeder));
+        }
+
         File::copy(__DIR__ . "/database/DatabaseSeeder.php", database_path($this->folderSeeder . "\DatabaseSeeder.php"));
     }
 
