@@ -11,7 +11,7 @@ class SeederHelper
         $laravelBefore8 = version_compare(app()->version(), "8.0.0") < 0;
         $seederDir = $laravelBefore8 ? 'seeds' : 'seeders';
 
-        $databaseSeederPath = database_path() . "\\" . $seederDir . '\DatabaseSeeder.php';
+        $databaseSeederPath = database_path() . "/" . $seederDir . '/DatabaseSeeder.php';
 
         $content = $files->get($databaseSeederPath);
         $indentChar = StringHelper::generateIndentation("", 1);
