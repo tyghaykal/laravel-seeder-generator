@@ -208,6 +208,7 @@ class ModelCommand
         }
 
         $dirSeed = $seedNamespace ? $seedNamespace : "";
+        $dirSeed = SeederHelper::lowerCaseNamespace($dirSeed);
         $dirSeed = str_replace("\\", "/", $dirSeed);
         $dirSeedExploded = preg_split("/[\\\\\/]/", $dirSeed);
         $dirSeedCreation = "";
@@ -224,9 +225,8 @@ class ModelCommand
             $isReplace = true;
             $this->files->delete($filePath);
         }
-        // dd($filePath);
-        $this->files->put($filePath, $fileContent);
 
+        $this->files->put($filePath, $fileContent);
         $this->parentCommand->info(($isReplace ? "Seed file replaced" : "Seed file created") . " : {$filePath}");
 
         return $seedNamespace . $seedClassName;

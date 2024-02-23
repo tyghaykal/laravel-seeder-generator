@@ -220,6 +220,7 @@ class TableCommand
         }
 
         $dirSeed = $seedNamespace ? $seedNamespace : "";
+        $dirSeed = SeederHelper::lowerCaseNamespace($dirSeed);
         $dirSeed = str_replace("\\", "/", $dirSeed);
         $dirSeedExploded = preg_split("/[\\\\\/]/", $dirSeed);
         $dirSeedCreation = "";

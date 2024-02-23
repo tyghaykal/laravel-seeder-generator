@@ -24,4 +24,12 @@ class SeederHelper
         }
         return $files->put($databaseSeederPath, $content) !== false;
     }
+
+    public static function lowerCaseNamespace(string $namespace): string
+    {
+        $namespace = str_replace("Database", "database", $namespace);
+        $namespace = str_replace("Seeders", "seeders", $namespace);
+        $namespace = str_replace("Seeds", "seeds", $namespace);
+        return $namespace;
+    }
 }
