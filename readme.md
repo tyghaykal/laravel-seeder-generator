@@ -17,13 +17,13 @@ Generate laravel seeder file from a real data from your database.
 
 | Laravel       | Version    |
 | ------------- | ---------- |
-| 11.x          | ^1.4.1     |
-| 10.x          | ^1.4       |
-| 9.x           | ^1.4       |
-| 8.x           | ^1.4       |
-| 7.x           | ^1.4       |
-| 6.x           | ^1.4       |
-| 5.8.x         | ^1.4       |
+| 11.x          | ^1.4.\*    |
+| 10.x          | ^1.4.\*    |
+| 9.x           | ^1.4.\*    |
+| 8.x           | ^1.4.\*    |
+| 7.x           | ^1.4.\*    |
+| 6.x           | ^1.4.\*    |
+| 5.8.x         | ^1.4.\*    |
 | 5.7.x & below | Not tested |
 
 ## Install
