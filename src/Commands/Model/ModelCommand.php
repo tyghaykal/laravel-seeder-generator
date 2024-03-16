@@ -29,7 +29,6 @@ class ModelCommand
             $seedCode = $this->getSeederCode($modelInstance);
 
             $seedClassName = $this->writeSeederFile($seedCode, $modelInstance, $this->parentCommand->getOutputLocation());
-
             if ($updateDatabaseSeeder) {
                 SeederHelper::updateDatabaseSeeder($this->files, $seedClassName);
             }
@@ -229,6 +228,6 @@ class ModelCommand
         $this->files->put($filePath, $fileContent);
         $this->parentCommand->info(($isReplace ? "Seed file replaced" : "Seed file created") . " : {$filePath}");
 
-        return $seedNamespace . $seedClassName;
+        return "\\" . $seedNamespace . "\\" . $seedClassName;
     }
 }

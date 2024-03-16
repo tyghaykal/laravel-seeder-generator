@@ -12,9 +12,18 @@ use TYGHaykal\LaravelSeedGenerator\Tests\Database\Seeders\TestModelSeeder;
 class TableCommandTest extends TestCase
 {
     use RefreshDatabase;
+    private $folderResult = false,
+        $folderSeeder = "",
+        $beforeLaravel7 = false;
+
     protected function getPackageProviders($app)
     {
         return [SeedGeneratorServiceProvider::class];
+    }
+
+    protected function defineDatabaseMigrations()
+    {
+        $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
     }
 
     protected function getEnvironmentSetUp($app)
@@ -22,21 +31,25 @@ class TableCommandTest extends TestCase
         $app["config"]->set("database.default", "testing");
 
         $app["config"]->set("app.aliases", [
-            "test_models" => \App\Models\TestModel::class,
+            "TestModel" => \App\Models\TestModel::class,
+            "TestModelChild" => \App\Models\TestModelChild::class,
         ]);
     }
 
-    private $folderResult = false,
-        $folderSeeder = "",
-        $beforeLaravel7 = false;
     public function setUp(): void
     {
         parent::setUp();
         $this->folderResult = version_compare(app()->version(), "8.0.0") >= 0 ? "After8" : "Before8";
         $this->folderSeeder = version_compare(app()->version(), "8.0.0") >= 0 ? "seeders" : "seeds";
         $this->beforeLaravel7 = version_compare(app()->version(), "7.0.0") < 0;
-        $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
 
+        if ($this->beforeLaravel7) {
+            $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
+        }
+
+        if (!File::exists(database_path($this->folderSeeder))) {
+            File::makeDirectory(database_path($this->folderSeeder));
+        }
         // copy database\DatabaseSeeder.php to orchestra database folder
         File::copy(__DIR__ . "/database/DatabaseSeeder.php", database_path($this->folderSeeder . "/DatabaseSeeder.php"));
     }
