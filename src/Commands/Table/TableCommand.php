@@ -220,6 +220,7 @@ class TableCommand
         }
 
         $dirSeed = $seedNamespace ? $seedNamespace : "";
+        $dirSeed = SeederHelper::lowerCaseNamespace($dirSeed);
         $dirSeed = str_replace("\\", "/", $dirSeed);
         $dirSeedExploded = preg_split("/[\\\\\/]/", $dirSeed);
         $dirSeedCreation = "";
@@ -240,6 +241,6 @@ class TableCommand
 
         $this->parentCommand->info(($isReplace ? "Seed file replaced" : "Seed file created") . " : {$filePath}");
 
-        return $seedNamespace . $seedClassName;
+        return "\\" . $seedNamespace . "\\" . $seedClassName;
     }
 }

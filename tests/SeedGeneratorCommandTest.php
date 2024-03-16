@@ -12,9 +12,17 @@ use TYGHaykal\LaravelSeedGenerator\Tests\Database\Seeders\TestModelSeeder;
 class ModelCommandTest extends TestCase
 {
     use RefreshDatabase;
+    private $folderResult = false,
+        $folderSeeder = "",
+        $beforeLaravel7 = false;
+
     protected function getPackageProviders($app)
     {
         return [SeedGeneratorServiceProvider::class];
+    }
+    protected function defineDatabaseMigrations()
+    {
+        $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
     }
 
     protected function getEnvironmentSetUp($app)
@@ -27,17 +35,17 @@ class ModelCommandTest extends TestCase
         ]);
     }
 
-    private $folderResult = false,
-        $folderSeeder = "",
-        $beforeLaravel7 = false;
     public function setUp(): void
     {
         parent::setUp();
         $this->folderResult = version_compare(app()->version(), "8.0.0") >= 0 ? "After8" : "Before8";
         $this->folderSeeder = version_compare(app()->version(), "8.0.0") >= 0 ? "seeders" : "seeds";
         $this->beforeLaravel7 = version_compare(app()->version(), "7.0.0") < 0;
-        $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
-        // copy database\DatabaseSeeder.php to orchestra database folder
+
+        if ($this->beforeLaravel7) {
+            $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
+        }
+
         if (!File::exists(database_path($this->folderSeeder))) {
             File::makeDirectory(database_path($this->folderSeeder));
         }

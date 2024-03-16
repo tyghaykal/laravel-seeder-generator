@@ -18,14 +18,12 @@ class SeedGeneratorCommand extends Command
     use CommandTrait;
     protected $signature = "seed:generate 
                                 {--show-prompt} 
-                                {--mode= : Set the resource mode (table or model)} 
-                                {--model-mode : Set the resource mode to model} 
-                                {--all-models : Generate seed for all models} 
+                                {--mode= : Set the source mode (table or model)} 
+                                {--model-mode : Set the source mode to model} 
                                 {--models= : Generate seed for selected model} 
-                                {--table-mode : Set the resource mode to table} 
+                                {--table-mode : Set the source mode to table} 
                                 {--tables= : Generate seed for selected tables}
                                 {--all-tables : Generate seed for all tables}
-                                {--without-relations} 
                                 {--where-raw-query= : The raw query condition}
                                 {--where=* : The where clause conditions}
                                 {--where-in=* : The where in clause conditions}
@@ -38,13 +36,14 @@ class SeedGeneratorCommand extends Command
                                 {--all-fields} 
                                 {--fields= : The fields to be seeded} 
                                 {--ignore-fields= : The fields to be ignored} 
-                                {--relations= : The relations to be seeded}
-                                {--relations-limit= : Limit relation data to be seeded}
+                                {--without-relations : only has effect on model mode with single model only} 
+                                {--relations= : The relations to be seeded, only has effect on model mode with single model only}
+                                {--relations-limit= : Limit relation data to be seeded, only has effect on model mode with single model only}
                                 {--output= : Output file will be located on this path} 
-                                {--no-seed : Skip update the database seeder file}
+                                {--no-seed : Skip include the database seeder file}
                                 ";
 
-    protected $description = "Generate a seed file from a model";
+    protected $description = "Generate a seed file from a model or a table";
     private $oldLaravelVersion = false,
         $commands = [],
         $showPrompt = false;
