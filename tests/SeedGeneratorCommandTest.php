@@ -26,6 +26,11 @@ class SeedGeneratorCommandTest extends TestCase
         ]);
     }
 
+    protected function defineDatabaseMigrations()
+    {
+        $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
+    }
+
     private $folderResult = false,
         $folderSeeder = "",
         $beforeLaravel7 = false;
@@ -35,7 +40,10 @@ class SeedGeneratorCommandTest extends TestCase
         $this->folderResult = version_compare(app()->version(), "8.0.0") >= 0 ? "After8" : "Before8";
         $this->folderSeeder = version_compare(app()->version(), "8.0.0") >= 0 ? "seeders" : "seeds";
         $this->beforeLaravel7 = version_compare(app()->version(), "7.0.0") < 0;
-        $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
+
+        if ($this->beforeLaravel7) {
+            $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
+        }
     }
 
     /** @test */
