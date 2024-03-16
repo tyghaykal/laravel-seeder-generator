@@ -1,8 +1,8 @@
-name: CI DEV Test
+name: CI Staging Test
 
 on:
   push:
-    branches: ["feat/*/*"]
+    branches: ["staging"]
 
 jobs:
   test:
