@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:.github/workflows/deployment.yml
 name: Deployment
+========
+name: CI Staging Test
+>>>>>>>> fcb3a1806aa4604a41b030430df9980eefb5c6a0:.github/workflows/staging.yml
 
 on:
   push:
