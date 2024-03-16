@@ -46,5 +46,10 @@
             "App\\Models\\": "tests/Models/",
             "App\\": "tests/Models/"
         }
+    },
+    "config": {
+        "allow-plugins": {
+            "kylekatarnls/update-helper": true
+        }
     }
 }
