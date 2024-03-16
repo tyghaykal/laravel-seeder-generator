@@ -1,0 +1,38 @@
+<?php
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class TestModelsSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+    public function run()
+    {
+        /**
+         * Command :
+         * artisan seed:generate --table-mode --tables=test_models --fields=id,name
+         *
+         */
+
+        $dataTables = [
+            [
+                'id' => 1,
+                'name' => 'test 1',
+            ],
+            [
+                'id' => 2,
+                'name' => 'test 2',
+            ],
+            [
+                'id' => 3,
+                'name' => 'test 3',
+            ]
+        ];
+        
+        DB::table("test_models")->insert($dataTables);
+    }
+}

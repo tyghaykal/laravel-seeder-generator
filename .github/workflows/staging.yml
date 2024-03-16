@@ -1,12 +1,13 @@
-name: Deployment
+name: CI Staging Test
 
 on:
   push:
-    branches: ["main"]
+    branches: ["staging"]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
         include:
@@ -51,23 +52,5 @@ jobs:
           composer update
 
       - name: Execute tests
-        run: vendor/bin/phpunit
-
-  release-on-push:
-    needs: test
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.TOKEN }}
-    steps:
-      - id: release
-        uses: rymndhng/release-on-push-action@master
-        with:
-          bump_version_scheme: minor
-          tag_prefix: "v"
-          use_github_release_notes: true
-
-      - name: Check Output Parameters
         run: |
-          echo "Got tag name ${{ steps.release.outputs.tag_name }}"
-          echo "Got release version ${{ steps.release.outputs.version }}"
-          echo "Upload release artifacts to ${{ steps.release.outputs.upload_url }}"
+          vendor/bin/phpunit
