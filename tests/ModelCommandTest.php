@@ -12,11 +12,14 @@ use TYGHaykal\LaravelSeedGenerator\Tests\Database\Seeders\TestModelSeeder;
 class ModelCommandTest extends TestCase
 {
     use RefreshDatabase;
+    private $folderResult = false,
+        $folderSeeder = "",
+        $beforeLaravel7 = false;
+
     protected function getPackageProviders($app)
     {
         return [SeedGeneratorServiceProvider::class];
     }
-
     protected function defineDatabaseMigrations()
     {
         $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
@@ -30,7 +33,11 @@ class ModelCommandTest extends TestCase
             "TestModel" => \App\Models\TestModel::class,
             "TestModelChild" => \App\Models\TestModelChild::class,
         ]);
+    }
 
+    public function setUp(): void
+    {
+        parent::setUp();
         $this->folderResult = version_compare(app()->version(), "8.0.0") >= 0 ? "After8" : "Before8";
         $this->folderSeeder = version_compare(app()->version(), "8.0.0") >= 0 ? "seeders" : "seeds";
         $this->beforeLaravel7 = version_compare(app()->version(), "7.0.0") < 0;
@@ -44,14 +51,6 @@ class ModelCommandTest extends TestCase
         }
         // copy database\DatabaseSeeder.php to orchestra database folder
         File::copy(__DIR__ . "/database/DatabaseSeeder.php", database_path($this->folderSeeder . "/DatabaseSeeder.php"));
-    }
-
-    private $folderResult = false,
-        $folderSeeder = "",
-        $beforeLaravel7 = false;
-    public function setUp(): void
-    {
-        parent::setUp();
     }
 
     public function test_seed_generator_error_no_mode_inserted()

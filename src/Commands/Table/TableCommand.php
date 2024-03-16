@@ -241,6 +241,6 @@ class TableCommand
 
         $this->parentCommand->info(($isReplace ? "Seed file replaced" : "Seed file created") . " : {$filePath}");
 
-        return $seedNamespace . $seedClassName;
+        return "\\" . $seedNamespace . "\\" . $seedClassName;
     }
 }
