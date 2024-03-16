@@ -28,38 +28,46 @@ jobs:
             laravel: 10.*
           - php: 8.2
             laravel: 11.*
+
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           extensions: pdo, sqlite, pdo_sqlite
+
       - name: Validate composer.json and composer.lock
         run: composer validate --strict
+
       - name: Install dependencies
         run: |
           composer config --no-plugins allow-plugins.kylekatarnls/update-helper true
           composer require "laravel/framework:${{ matrix.laravel }}" --no-update
           composer update
+
       - name: Execute tests
         run: vendor/bin/phpunit
-  # release-on-push:
-  #   needs: test
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     GITHUB_TOKEN: ${{ secrets.TOKEN }}
-  #   steps:
-  #     - id: release
-  #       uses: rymndhng/release-on-push-action@master
-  #       with:
-  #         bump_version_scheme: minor
-  #         tag_prefix: "v"
-  #         use_github_release_notes: true
-  #     - name: Check Output Parameters
-  #       run: |
-  #         echo "Got tag name ${{ steps.release.outputs.tag_name }}"
-  #         echo "Got release version ${{ steps.release.outputs.version }}"
-  #         echo "Upload release artifacts to ${{ steps.release.outputs.upload_url }}"
+
+  release-on-push:
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.TOKEN }}
+    steps:
+      - id: release
+        uses: rymndhng/release-on-push-action@master
+        with:
+          bump_version_scheme: minor
+          tag_prefix: "v"
+          use_github_release_notes: true
+
+      - name: Check Output Parameters
+        run: |
+          echo "Got tag name ${{ steps.release.outputs.tag_name }}"
+          echo "Got release version ${{ steps.release.outputs.version }}"
+          echo "Upload release artifacts to ${{ steps.release.outputs.upload_url }}"
