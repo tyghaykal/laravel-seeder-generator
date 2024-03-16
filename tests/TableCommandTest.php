@@ -17,13 +17,33 @@ class TableCommandTest extends TestCase
         return [SeedGeneratorServiceProvider::class];
     }
 
+    protected function defineDatabaseMigrations()
+    {
+        $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
+    }
+
     protected function getEnvironmentSetUp($app)
     {
         $app["config"]->set("database.default", "testing");
 
         $app["config"]->set("app.aliases", [
-            "test_models" => \App\Models\TestModel::class,
+            "TestModel" => \App\Models\TestModel::class,
+            "TestModelChild" => \App\Models\TestModelChild::class,
         ]);
+
+        $this->folderResult = version_compare(app()->version(), "8.0.0") >= 0 ? "After8" : "Before8";
+        $this->folderSeeder = version_compare(app()->version(), "8.0.0") >= 0 ? "seeders" : "seeds";
+        $this->beforeLaravel7 = version_compare(app()->version(), "7.0.0") < 0;
+
+        if ($this->beforeLaravel7) {
+            $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
+        }
+
+        if (!File::exists(database_path($this->folderSeeder))) {
+            File::makeDirectory(database_path($this->folderSeeder));
+        }
+        // copy database\DatabaseSeeder.php to orchestra database folder
+        File::copy(__DIR__ . "/database/DatabaseSeeder.php", database_path($this->folderSeeder . "/DatabaseSeeder.php"));
     }
 
     private $folderResult = false,
@@ -32,13 +52,6 @@ class TableCommandTest extends TestCase
     public function setUp(): void
     {
         parent::setUp();
-        $this->folderResult = version_compare(app()->version(), "8.0.0") >= 0 ? "After8" : "Before8";
-        $this->folderSeeder = version_compare(app()->version(), "8.0.0") >= 0 ? "seeders" : "seeds";
-        $this->beforeLaravel7 = version_compare(app()->version(), "7.0.0") < 0;
-        $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
-
-        // copy database\DatabaseSeeder.php to orchestra database folder
-        File::copy(__DIR__ . "/database/DatabaseSeeder.php", database_path($this->folderSeeder . "/DatabaseSeeder.php"));
     }
 
     public function test_seed_generator_error_no_mode_inserted()
