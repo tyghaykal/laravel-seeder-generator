@@ -46,18 +46,6 @@ In the config file, you can adjust some of settings on generating seeders file s
 
 ## Usage
 
-To generate your seeder file, you can run:
-
-```bash
-php artisan seed:generate ModelNamespace --no-additional
-```
-
-Or you just can type like below then it will prompt you to fill some specification:
-
-```bash
-php artisan seed:generate
-```
-
 ### Options
 
 | Option                             | Description                                                                               |
