@@ -80,85 +80,85 @@ In the config file, you can adjust some of settings on generating seeders file s
 Just set the model value with your model Namespace without `\App\Models` or `\App` or your defined namespace on `config.php`, for example your model namespace is under `\App\Models\Master\Type`, so you just need type `Master\Type`. Can be multiple and separated with comma.
 
 ```bash
-php artisan seed:generate --model-mode --model=Master\Type
+php artisan seed:generate --model-mode --models=Master\Type
 ```
 
 You can run the command and show the menu using
 
 ```bash
-php artisan seed:generate --model-mode --model=Master\Type --show-prompt
+php artisan seed:generate --model-mode --models=Master\Type --show-prompt
 ```
 
 You can filter which data will be included into seeder file using **where** clause
 
 ```bash
-php artisan seed:generate --model-mode --model=Master\Type --where=field,type,value
+php artisan seed:generate --model-mode --models=Master\Type --where=field,type,value
 ```
 
 You can filter which data will be included into seeder file using **where in** clause
 
 ```bash
-php artisan seed:generate --model-mode --model=Master\Type --where-in=field,value1,value2
+php artisan seed:generate --model-mode --models=Master\Type --where-in=field,value1,value2
 ```
 
 You can filter which data will not be included into seeder file using **where not in** clause
 
 ```bash
-php artisan seed:generate --model-mode --model=Master\Type --where-in=field,value1,value2
+php artisan seed:generate --model-mode --models=Master\Type --where-in=field,value1,value2
 ```
 
 You can order the data will be included into seeder file using **order-by** clause
 
 ```bash
-php artisan seed:generate --model-mode --model=Master\Type --order-by=field,type
+php artisan seed:generate --model-mode --models=Master\Type --order-by=field,type
 ```
 
 You can limit the data will be included into seeder file using **limit** clause
 
 ```bash
-php artisan seed:generate --model-mode --model=Master\Type --limit=10
+php artisan seed:generate --model-mode --models=Master\Type --limit=10
 ```
 
 You can also define which data you want to include to seeder file based on the id with, can only run with single model only:
 
 ```bash
-php artisan seed:generate --model-mode --model=Master\Type --ids="1,2,3"
+php artisan seed:generate --model-mode --models=Master\Type --ids="1,2,3"
 ```
 
 Or you want to skip some ids:
 
 ```bash
-php artisan seed:generate --model-mode --model=Master\Type --ignore-ids="1,2,3"
+php artisan seed:generate --model-mode --models=Master\Type --ignore-ids="1,2,3"
 ```
 
 You can also define which field that you want include to seeder file based on the field name with:
 
 ```bash
-php artisan seed:generate --model-mode --model=Master\Type --fields="id,name"
+php artisan seed:generate --model-mode --models=Master\Type --fields="id,name"
 ```
 
 Or you want skip some fields:
 
 ```bash
-php artisan seed:generate --model-mode --model=Master\Type --ignore-fields="id,name"
+php artisan seed:generate --model-mode --models=Master\Type --ignore-fields="id,name"
 ```
 
 You can also define which hasMany relation that you want seed, only has effect on model mode with single model only:
 
 ```bash
-php artisan seed:generate --model-mode --model=Master\Type --relations="relationName1,relationName2"
+php artisan seed:generate --model-mode --models=Master\Type --relations="relationName1,relationName2"
 ```
 
 You can also limit the relation that you want seed, only has effect on model mode with single model only:
 
 ```bash
-php artisan seed:generate --model-mode --model=Master\Type --relations="relationName1,relationName2" --relations-limit=10
+php artisan seed:generate --model-mode --models=Master\Type --relations="relationName1,relationName2" --relations-limit=10
 ```
 
 You can also change the location of generated seeder file:
 
 ```bash
-php artisan seed:generate --model-mode --model=Master\Type --output=Should/Be/In/Here/Data
+php artisan seed:generate --model-mode --models=Master\Type --output=Should/Be/In/Here/Data
 
 // it will produce in path database/seeders/Should/Be/In/Here/DataSeeder
 // or
@@ -168,7 +168,7 @@ php artisan seed:generate --model-mode --model=Master\Type --output=Should/Be/In
 By default, every generated seeders file will be presented on DatabaseSeeder.php, if you don't want it, you can use **--no-seed** option:
 
 ```bash
-php artisan seed:generate --model-mode --model=Master\Type --no-seed
+php artisan seed:generate --model-mode --models=Master\Type --no-seed
 ```
 
 ### Usage on Table with Option
