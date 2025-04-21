@@ -104,7 +104,7 @@ php artisan seed:generate --model-mode --models=Master\Type --where-in=field,val
 You can filter which data will not be included into seeder file using **where not in** clause
 
 ```bash
-php artisan seed:generate --model-mode --models=Master\Type --where-in=field,value1,value2
+php artisan seed:generate --model-mode --models=Master\Type --where-not-in=field,value1,value2
 ```
 
 You can order the data will be included into seeder file using **order-by** clause
