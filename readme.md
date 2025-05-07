@@ -200,7 +200,7 @@ php artisan seed:generate --table-mode --tables=master_leave_types --where-in=fi
 You can filter which data will not be included into seeder file using **where not in** clause
 
 ```bash
-php artisan seed:generate --table-mode --tables=master_leave_types --where-in=field,value1,value2
+php artisan seed:generate --table-mode --tables=master_leave_types --where-not-in=field,value1,value2
 ```
 
 You can order the data will be included into seeder file using **order-by** clause
