@@ -21,15 +21,13 @@ class StringHelper
             }
             // Only convert to integer if it's a pure numeric value
             // But preserve leading zeros in identifiers (table/column names) by checking if the key suggests it's an identifier
-            // Identifiers typically have underscores, start with letters, or contain special characters
-            $isIdentifier = is_string($key) && (
-                strpos($key, '_') !== false ||
-                preg_match('/^[a-zA-Z]/', $key) ||
-                preg_match('/^[0-9]+[a-zA-Z_]/', $key) ||
-                preg_match('/^[0-9]+_[a-zA-Z]/', $key)
+            // Identifiers with leading zeros typically start with one or more zeros followed by letters or underscores
+            $isLeadingZeroIdentifier = is_string($key) && (
+                preg_match('/^0+[a-zA-Z_]/', $key) ||  // 0name, 00_column, 000_test
+                preg_match('/^0+$/', $key)             // 0, 00, 000 (pure zero identifiers)
             );
 
-            if (is_numeric($value) && intval($value) == $value && !$isIdentifier) {
+            if (is_numeric($value) && intval($value) == $value && !$isLeadingZeroIdentifier) {
                 $value = intval($value);
             }
             $prettyValue = var_export($value, true);
