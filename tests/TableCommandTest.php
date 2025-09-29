@@ -1,4 +1,5 @@
 <?php
+
 namespace TYGHaykal\LaravelSeedGenerator\Tests;
 
 use Orchestra\Testbench\TestCase;
@@ -1102,5 +1103,96 @@ class TableCommandTest extends TestCase
         );
 
         $this->assertSame($expectedOutput, $actualOutput);
+    }
+
+    public function test_seed_generator_preserves_leading_zeros_in_table_names()
+    {
+        // Create a table with leading zeros in the name
+        \DB::statement('CREATE TABLE "000_test_table" (
+            id INTEGER PRIMARY KEY,
+            name VARCHAR(255),
+            "0name" VARCHAR(255),
+            "00_column" VARCHAR(255)
+        )');
+
+        // Insert test data
+        \DB::table('000_test_table')->insert([
+            'id' => 1,
+            'name' => 'test',
+            '0name' => 'zero_name',
+            '00_column' => 'double_zero'
+        ]);
+
+        // Generate seeder
+        $this->artisan('seed:generate', [
+            '--table-mode' => true,
+            '--tables' => '000_test_table',
+            '--no-seed' => true
+        ])->assertExitCode(0);
+
+        // Check that the seeder file was created
+        $this->assertFileExists(database_path("{$this->folderSeeder}/Tables/000TestTableSeeder.php"));
+
+        // Read the generated seeder content
+        $seederContent = file_get_contents(database_path("{$this->folderSeeder}/Tables/000TestTableSeeder.php"));
+
+        // Verify that leading zeros are preserved in the table name
+        $this->assertStringContainsString('"000_test_table"', $seederContent);
+
+        // Verify that leading zeros are preserved in column names
+        $this->assertStringContainsString("'0name'", $seederContent);
+        $this->assertStringContainsString("'00_column'", $seederContent);
+
+        // Verify that the values are preserved as strings
+        $this->assertStringContainsString("'zero_name'", $seederContent);
+        $this->assertStringContainsString("'double_zero'", $seederContent);
+    }
+
+    public function test_seed_generator_preserves_leading_zeros_in_column_names()
+    {
+        // Create a table with various leading zero column names
+        \DB::statement('CREATE TABLE test_leading_zeros (
+            id INTEGER PRIMARY KEY,
+            "0name" VARCHAR(255),
+            "00_id" INTEGER,
+            "000_code" VARCHAR(255),
+            "0_priority" INTEGER
+        )');
+
+        // Insert test data
+        \DB::table('test_leading_zeros')->insert([
+            'id' => 1,
+            '0name' => 'test_name',
+            '00_id' => 123,
+            '000_code' => 'ABC123',
+            '0_priority' => 5
+        ]);
+
+        // Generate seeder
+        $this->artisan('seed:generate', [
+            '--table-mode' => true,
+            '--tables' => 'test_leading_zeros',
+            '--no-seed' => true
+        ])->assertExitCode(0);
+
+        // Check that the seeder file was created
+        $this->assertFileExists(database_path("{$this->folderSeeder}/Tables/TestLeadingZerosSeeder.php"));
+
+        // Read the generated seeder content
+        $seederContent = file_get_contents(database_path("{$this->folderSeeder}/Tables/TestLeadingZerosSeeder.php"));
+
+        // Verify that all leading zero column names are preserved
+        $this->assertStringContainsString("'0name'", $seederContent);
+        $this->assertStringContainsString("'00_id'", $seederContent);
+        $this->assertStringContainsString("'000_code'", $seederContent);
+        $this->assertStringContainsString("'0_priority'", $seederContent);
+
+        // Verify that numeric values are still converted to integers (not strings)
+        $this->assertStringContainsString("123", $seederContent);
+        $this->assertStringContainsString("5", $seederContent);
+
+        // Verify that string values remain as strings
+        $this->assertStringContainsString("'test_name'", $seederContent);
+        $this->assertStringContainsString("'ABC123'", $seederContent);
     }
 }
