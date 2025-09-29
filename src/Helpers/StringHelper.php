@@ -19,9 +19,17 @@ class StringHelper
             if (is_string($value) && preg_match("/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z/", $value)) {
                 $value = \Carbon\Carbon::parse($value)->format("Y-m-d H:i:s");
             }
-            // Only convert to integer if it's a pure numeric value (not a string that starts with numbers)
-            // This prevents table/column names like "000_users" or "0name" from being converted to integers
-            if (is_numeric($value) && intval($value) == $value && !is_string($value)) {
+            // Only convert to integer if it's a pure numeric value
+            // But preserve leading zeros in identifiers (table/column names) by checking if the key suggests it's an identifier
+            // Identifiers typically have underscores, start with letters, or contain special characters
+            $isIdentifier = is_string($key) && (
+                strpos($key, '_') !== false || 
+                preg_match('/^[a-zA-Z]/', $key) || 
+                preg_match('/^[0-9]+[a-zA-Z_]/', $key) ||
+                preg_match('/^[0-9]+_[a-zA-Z]/', $key)
+            );
+            
+            if (is_numeric($value) && intval($value) == $value && !$isIdentifier) {
                 $value = intval($value);
             }
             $prettyValue = var_export($value, true);
