@@ -1,4 +1,5 @@
 <?php
+
 namespace TYGHaykal\LaravelSeedGenerator\Helpers;
 
 use Illuminate\Console\Command;
@@ -18,7 +19,9 @@ class StringHelper
             if (is_string($value) && preg_match("/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z/", $value)) {
                 $value = \Carbon\Carbon::parse($value)->format("Y-m-d H:i:s");
             }
-            if (is_numeric($value) && intval($value) == $value) {
+            // Only convert to integer if it's a pure numeric value (not a string that starts with numbers)
+            // This prevents table/column names like "000_users" or "0name" from being converted to integers
+            if (is_numeric($value) && intval($value) == $value && !is_string($value)) {
                 $value = intval($value);
             }
             $prettyValue = var_export($value, true);
