@@ -23,12 +23,12 @@ class StringHelper
             // But preserve leading zeros in identifiers (table/column names) by checking if the key suggests it's an identifier
             // Identifiers typically have underscores, start with letters, or contain special characters
             $isIdentifier = is_string($key) && (
-                strpos($key, '_') !== false || 
-                preg_match('/^[a-zA-Z]/', $key) || 
+                strpos($key, '_') !== false ||
+                preg_match('/^[a-zA-Z]/', $key) ||
                 preg_match('/^[0-9]+[a-zA-Z_]/', $key) ||
                 preg_match('/^[0-9]+_[a-zA-Z]/', $key)
             );
-            
+
             if (is_numeric($value) && intval($value) == $value && !$isIdentifier) {
                 $value = intval($value);
             }
