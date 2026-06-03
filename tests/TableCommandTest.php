@@ -1138,7 +1138,7 @@ class TableCommandTest extends TestCase
         });
 
         // Insert test data
-        \DB::table('000_test_table')->insert([
+        $this->insertIntoTable('000_test_table', [
             'id' => 1,
             'name' => 'test',
             '0name' => 'zero_name',
@@ -1182,7 +1182,7 @@ class TableCommandTest extends TestCase
         });
 
         // Insert test data
-        \DB::table('test_leading_zeros')->insert([
+        $this->insertIntoTable('test_leading_zeros', [
             'id' => 1,
             '0name' => 'test_name',
             '00_id' => 123,
@@ -1216,5 +1216,17 @@ class TableCommandTest extends TestCase
         // Verify that string values remain as strings
         $this->assertStringContainsString("'test_name'", $seederContent);
         $this->assertStringContainsString("'ABC123'", $seederContent);
+    }
+
+    private function insertIntoTable(string $table, array $data)
+    {
+        $driver = \DB::connection()->getPdo()->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        if ($driver === 'sqlsrv' || $driver === 'dblib') {
+            \DB::statement("SET IDENTITY_INSERT [$table] ON");
+            \DB::table($table)->insert($data);
+            \DB::statement("SET IDENTITY_INSERT [$table] OFF");
+        } else {
+            \DB::table($table)->insert($data);
+        }
     }
 }

@@ -16,8 +16,12 @@ class StringHelper
         $prettyArrayStrings = [];
 
         foreach ($array as $key => $value) {
-            if (is_string($value) && preg_match("/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z/", $value)) {
-                $value = \Carbon\Carbon::parse($value)->format("Y-m-d H:i:s");
+            if (is_string($value)) {
+                if (preg_match("/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z/", $value)) {
+                    $value = \Carbon\Carbon::parse($value)->format("Y-m-d H:i:s");
+                } elseif (preg_match("/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+$/", $value)) {
+                    $value = explode(".", $value)[0];
+                }
             }
             // Only convert to integer if it's a pure numeric value
             // But preserve leading zeros in identifiers (table/column names) by checking if the key suggests it's an identifier
