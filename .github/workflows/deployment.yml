@@ -8,30 +8,64 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        include:
-          - php: 7.3
-            laravel: 5.8.*
-          - php: 7.3
-            laravel: 6.*
-          - php: 7.4
-            laravel: 7.*
-          - php: 7.4
-            laravel: 8.*
-          - php: 8.1
-            laravel: 9.*
-          - php: 8.2
-            laravel: 9.*
-          - php: 8.1
-            laravel: 10.*
-          - php: 8.2
-            laravel: 10.*
-          - php: 8.2
-            laravel: 11.*
-          - php: 8.3
-            laravel: 12.*
+        php-laravel:
+          - { php: 7.3, laravel: 5.8.* }
+          - { php: 7.3, laravel: 6.* }
+          - { php: 7.4, laravel: 7.* }
+          - { php: 7.4, laravel: 8.* }
+          - { php: 8.1, laravel: 9.* }
+          - { php: 8.2, laravel: 9.* }
+          - { php: 8.1, laravel: 10.* }
+          - { php: 8.2, laravel: 10.* }
+          - { php: 8.2, laravel: 11.* }
+          - { php: 8.3, laravel: 12.* }
+          - { php: 8.3, laravel: 13.* }
+          - { php: 8.4, laravel: 13.* }
+          - { php: 8.5, laravel: 13.* }
+        database: [sqlite, mysql, pgsql, mariadb, sqlsrv]
 
-    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+    name: PHP ${{ matrix.php-laravel.php }} - L ${{ matrix.php-laravel.laravel }} - ${{ matrix.database }}
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: testing
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+      mariadb:
+        image: mariadb:10.6
+        env:
+          MARIADB_ALLOW_EMPTY_PASSWORD: yes
+          MARIADB_DATABASE: testing
+        ports:
+          - 3307:3306
+        options: --health-cmd="mariadb-admin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: testing
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      sqlsrv:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: Password12!
+          MSSQL_PID: Developer
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: Checkout code
@@ -40,19 +74,23 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
-          extensions: pdo, sqlite, pdo_sqlite
-
-      - name: Validate composer.json and composer.lock
-        run: composer validate --strict
+          php-version: ${{ matrix.php-laravel.php }}
+          extensions: pdo, sqlite, pdo_sqlite, mysql, pdo_mysql, pgsql, pdo_pgsql, sqlsrv, pdo_sqlsrv
+          coverage: none
 
       - name: Install dependencies
         run: |
-          composer config --no-plugins allow-plugins.kylekatarnls/update-helper true
-          composer require "laravel/framework:${{ matrix.laravel }}" --no-update
-          composer update
+          composer require "laravel/framework:${{ matrix.php-laravel.laravel }}" --no-update
+          composer update --prefer-dist --no-interaction
 
       - name: Execute tests
+        env:
+          DB_CONNECTION: ${{ matrix.database }}
+          DB_HOST: 127.0.0.1
+          DB_PORT: ${{ matrix.database == 'mysql' && 3306 || matrix.database == 'mariadb' && 3307 || matrix.database == 'pgsql' && 5432 || matrix.database == 'sqlsrv' && 1433 || '' }}
+          DB_DATABASE: ${{ matrix.database == 'sqlsrv' && 'master' || 'testing' }}
+          DB_USERNAME: ${{ matrix.database == 'pgsql' && 'postgres' || matrix.database == 'sqlsrv' && 'sa' || 'root' }}
+          DB_PASSWORD: ${{ matrix.database == 'pgsql' && 'password' || matrix.database == 'sqlsrv' && 'Password12!' || '' }}
         run: vendor/bin/phpunit
 
   release-on-push:

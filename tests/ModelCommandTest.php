@@ -27,7 +27,24 @@ class ModelCommandTest extends TestCase
 
     protected function getEnvironmentSetUp($app)
     {
-        $app["config"]->set("database.default", "testing");
+        $dbConnection = env("DB_CONNECTION", "testing");
+        $app["config"]->set("database.default", $dbConnection);
+
+        if ($dbConnection !== "testing") {
+            $app["config"]->set("database.connections.$dbConnection", [
+                "driver" => $dbConnection === "mariadb" ? "mysql" : $dbConnection,
+                "host" => env("DB_HOST", "127.0.0.1"),
+                "port" => env("DB_PORT"),
+                "database" => env("DB_DATABASE"),
+                "username" => env("DB_USERNAME"),
+                "password" => env("DB_PASSWORD"),
+                "prefix" => "",
+            ]);
+
+            if ($dbConnection === "sqlsrv") {
+                $app["config"]->set("database.connections.sqlsrv.trust_server_certificate", true);
+            }
+        }
 
         $app["config"]->set("app.aliases", [
             "TestModel" => \App\Models\TestModel::class,
