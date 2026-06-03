@@ -33,19 +33,19 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_ROOT_PASSWORD: password
           MYSQL_DATABASE: testing
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --health-cmd="mysqladmin ping -ppassword" --health-interval=10s --health-timeout=5s --health-retries=3
       mariadb:
-        image: mariadb:10.6
+        image: mariadb:10.11
         env:
-          MARIADB_ALLOW_EMPTY_PASSWORD: yes
+          MARIADB_ROOT_PASSWORD: password
           MARIADB_DATABASE: testing
         ports:
           - 3307:3306
-        options: --health-cmd="mariadb-admin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=3
       postgres:
         image: postgres:14
         env:
@@ -57,16 +57,11 @@ jobs:
       sqlsrv:
         image: mcr.microsoft.com/mssql/server:2022-latest
         env:
-          ACCEPT_EULA: Y
-          MSSQL_SA_PASSWORD: Password12!
-          MSSQL_PID: Developer
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "Password123!"
+          MSSQL_PID: "Developer"
         ports:
           - 1433:1433
-        options: >-
-          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q 'SELECT 1'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
 
     steps:
       - name: Checkout code
@@ -90,6 +85,6 @@ jobs:
           DB_HOST: 127.0.0.1
           DB_PORT: ${{ matrix.database == 'mysql' && 3306 || matrix.database == 'mariadb' && 3307 || matrix.database == 'pgsql' && 5432 || matrix.database == 'sqlsrv' && 1433 || '' }}
           DB_DATABASE: ${{ matrix.database == 'sqlsrv' && 'master' || 'testing' }}
-          DB_USERNAME: ${{ matrix.database == 'pgsql' && 'postgres' || matrix.database == 'sqlsrv' && 'sa' || 'root' }}
-          DB_PASSWORD: ${{ matrix.database == 'pgsql' && 'password' || matrix.database == 'sqlsrv' && 'Password12!' || '' }}
+          DB_USERNAME: ${{ matrix.database == 'sqlsrv' && 'sa' || (matrix.database == 'pgsql' && 'postgres' || 'root') }}
+          DB_PASSWORD: ${{ matrix.database == 'sqlsrv' && 'Password123!' || 'password' }}
         run: vendor/bin/phpunit
