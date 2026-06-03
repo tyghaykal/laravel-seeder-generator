@@ -91,7 +91,11 @@ jobs:
           fi
 
           sudo apt-get update
-          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+          if [ "${{ matrix.php-laravel.php }}" = "7.3" ]; then
+            sudo ACCEPT_EULA=Y apt-get install -y msodbcsql17 unixodbc-dev
+          else
+            sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+          fi
 
       - name: Wait for SQL Server
         if: matrix.database == 'sqlsrv'
