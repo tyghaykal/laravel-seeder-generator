@@ -2,7 +2,7 @@ name: CI Test
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 0 */3 * *"
 
 jobs:
   test:
@@ -65,7 +65,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -79,14 +79,18 @@ jobs:
         if: matrix.database == 'sqlsrv'
         run: |
           source /etc/os-release
-          UBUNTU_VERSION="${VERSION_ID}"
-          if ! curl -fsSL "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VERSION}/prod.list" > ./mssql-release.list; then
-            UBUNTU_VERSION="22.04"
-            curl -fsSL "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VERSION}/prod.list" > ./mssql-release.list
+          # Use the current version, but fallback to 22.04 if on 24.04 (Noble) since Microsoft might not have it yet
+          REPO_VERSION=$VERSION_ID
+          if [ "$VERSION_ID" = "24.04" ]; then REPO_VERSION="22.04"; fi
+
+          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/${REPO_VERSION}/prod $(lsb_release -cs 2>/dev/null || echo jammy) main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
+
+          # If the above failed (e.g. codename mismatch), try a safer fallback for 22.04
+          if [ "$VERSION_ID" = "24.04" ]; then
+            echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/22.04/prod jammy main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
           fi
-          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
-          sudo install -o root -g root -m 644 microsoft.gpg /usr/share/keyrings/microsoft-prod.gpg
-          sed -E "s#^deb (\[[^]]+\] )?#deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] #" ./mssql-release.list | sudo tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
+
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
 
