@@ -9,50 +9,125 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
-        include:
-          - php: 7.3
-            laravel: 5.8.*
-          - php: 7.3
-            laravel: 6.*
-          - php: 7.4
-            laravel: 7.*
-          - php: 7.4
-            laravel: 8.*
-          - php: 8.1
-            laravel: 9.*
-          - php: 8.2
-            laravel: 9.*
-          - php: 8.1
-            laravel: 10.*
-          - php: 8.2
-            laravel: 10.*
-          - php: 8.2
-            laravel: 11.*
-          - php: 8.3
-            laravel: 12.*
+        php-laravel:
+          - { php: 7.3, laravel: 5.8.* }
+          - { php: 7.3, laravel: 6.* }
+          - { php: 7.4, laravel: 7.* }
+          - { php: 7.4, laravel: 8.* }
+          - { php: 8.1, laravel: 9.* }
+          - { php: 8.2, laravel: 9.* }
+          - { php: 8.1, laravel: 10.* }
+          - { php: 8.2, laravel: 10.* }
+          - { php: 8.2, laravel: 11.* }
+          - { php: 8.3, laravel: 12.* }
+          - { php: 8.3, laravel: 13.* }
+          - { php: 8.4, laravel: 13.* }
+          - { php: 8.5, laravel: 13.* }
+        database: [sqlite, mysql, pgsql, mariadb, sqlsrv]
 
-    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+    name: PHP ${{ matrix.php-laravel.php }} - L ${{ matrix.php-laravel.laravel }} - ${{ matrix.database }}
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: testing
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping -ppassword" --health-interval=10s --health-timeout=5s --health-retries=3
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: password
+          MARIADB_DATABASE: testing
+        ports:
+          - 3307:3306
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=3
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: testing
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      sqlsrv:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "Password123!"
+          MSSQL_PID: "Developer"
+        ports:
+          - 1433:1433
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
-          extensions: pdo, sqlite, pdo_sqlite
+          php-version: ${{ matrix.php-laravel.php }}
+          extensions: pdo, sqlite, pdo_sqlite, mysql, pdo_mysql, pgsql, pdo_pgsql, sqlsrv, pdo_sqlsrv
+          coverage: none
+          tools: composer:v2
 
-      - name: Validate composer.json and composer.lock
-        run: composer validate --strict
+      - name: Install SQL Server driver (Linux)
+        if: matrix.database == 'sqlsrv'
+        run: |
+          source /etc/os-release
+          # Use the current version, but fallback to 22.04 if on 24.04 (Noble) since Microsoft might not have it yet
+          REPO_VERSION=$VERSION_ID
+          if [ "$VERSION_ID" = "24.04" ]; then REPO_VERSION="22.04"; fi
+
+          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/${REPO_VERSION}/prod $(lsb_release -cs 2>/dev/null || echo jammy) main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
+
+          # If the above failed (e.g. codename mismatch), try a safer fallback for 22.04
+          if [ "$VERSION_ID" = "24.04" ]; then
+            echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/22.04/prod jammy main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          fi
+
+          sudo apt-get update
+          if [ "${{ matrix.php-laravel.php }}" = "7.3" ]; then
+            sudo ACCEPT_EULA=Y apt-get install -y msodbcsql17 unixodbc-dev
+          else
+            sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+          fi
+
+      - name: Wait for SQL Server
+        if: matrix.database == 'sqlsrv'
+        run: |
+          for i in {1..30}; do
+            if docker exec ${{ job.services.sqlsrv.id }} bash -lc 'SQLCMD=$([ -x /opt/mssql-tools18/bin/sqlcmd ] && echo /opt/mssql-tools18/bin/sqlcmd || echo /opt/mssql-tools/bin/sqlcmd); "$SQLCMD" -C -S localhost -U sa -P "Password123!" -Q "SELECT 1"' > /dev/null 2>&1; then
+              echo "SQL Server is ready."
+              exit 0
+            fi
+            echo "Waiting for SQL Server to be ready..."
+            sleep 5
+          done
+          echo "SQL Server did not become ready in time."
+          docker logs ${{ job.services.sqlsrv.id }}
+          exit 1
+
+      - name: Fix MySQL 8 authentication
+        if: matrix.database == 'mysql'
+        run: docker exec ${{ job.services.mysql.id }} mysql -ppassword -e "ALTER USER 'root' IDENTIFIED WITH mysql_native_password BY 'password';"
 
       - name: Install dependencies
         run: |
-          composer config --no-plugins allow-plugins.kylekatarnls/update-helper true
-          composer require "laravel/framework:${{ matrix.laravel }}" --no-update
-          composer update
+          composer require "laravel/framework:${{ matrix.php-laravel.laravel }}" --no-update
+          composer update --prefer-dist --no-interaction
 
       - name: Execute tests
-        run: |
-          vendor/bin/phpunit
+        env:
+          DB_CONNECTION: ${{ matrix.database }}
+          DB_HOST: 127.0.0.1
+          DB_PORT: ${{ matrix.database == 'mysql' && 3306 || matrix.database == 'mariadb' && 3307 || matrix.database == 'pgsql' && 5432 || matrix.database == 'sqlsrv' && 1433 || '' }}
+          DB_DATABASE: ${{ matrix.database == 'sqlsrv' && 'master' || 'testing' }}
+          DB_USERNAME: ${{ matrix.database == 'sqlsrv' && 'sa' || (matrix.database == 'pgsql' && 'postgres' || 'root') }}
+          DB_PASSWORD: ${{ matrix.database == 'sqlsrv' && 'Password123!' || 'password' }}
+        run: vendor/bin/phpunit

@@ -17,6 +17,8 @@ Generate laravel seeder file from a real data from your database.
 
 | Laravel        | Version    |
 | -------------- | ---------- |
+| 13.x           | ^2.0.\*    |
+| 12.x           | ^2.0.\*    |
 | 11.x           | ^2.0.\*    |
 | 10.x           | ^2.0.\*    |
 | 9.x            | ^2.0.\*    |

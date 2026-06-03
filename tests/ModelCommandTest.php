@@ -1,17 +1,16 @@
 <?php
+
 namespace TYGHaykal\LaravelSeedGenerator\Tests;
 
 use Orchestra\Testbench\TestCase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use TYGHaykal\LaravelSeedGenerator\SeedGeneratorServiceProvider;
 use TYGHaykal\LaravelSeedGenerator\Commands\SeedGeneratorCommand;
 use TYGHaykal\LaravelSeedGenerator\Tests\Database\Seeders\TestModelSeeder;
 
 class ModelCommandTest extends TestCase
 {
-    use RefreshDatabase;
     private $folderResult = false,
         $folderSeeder = "",
         $beforeLaravel7 = false;
@@ -20,14 +19,45 @@ class ModelCommandTest extends TestCase
     {
         return [SeedGeneratorServiceProvider::class];
     }
-    protected function defineDatabaseMigrations()
-    {
-        $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
-    }
-
     protected function getEnvironmentSetUp($app)
     {
-        $app["config"]->set("database.default", "testing");
+        $dbConnection = env("DB_CONNECTION", "testing");
+        $sqliteDatabase = database_path("testbench.sqlite");
+        if (!file_exists($sqliteDatabase)) {
+            touch($sqliteDatabase);
+        }
+
+        $app["config"]->set("database.default", $dbConnection);
+
+        if ($dbConnection === "testing") {
+            $app["config"]->set("database.connections.testing", [
+                "driver" => "sqlite",
+                "database" => $sqliteDatabase,
+                "prefix" => "",
+                "foreign_key_constraints" => true,
+            ]);
+        }
+
+        if ($dbConnection !== "testing") {
+            $database = env("DB_DATABASE");
+            if ($dbConnection === "sqlite" && $database === "testing") {
+                $database = $sqliteDatabase;
+            }
+
+            $app["config"]->set("database.connections.$dbConnection", [
+                "driver" => $dbConnection === "mariadb" ? "mysql" : $dbConnection,
+                "host" => env("DB_HOST", "127.0.0.1"),
+                "port" => env("DB_PORT"),
+                "database" => $database,
+                "username" => env("DB_USERNAME"),
+                "password" => env("DB_PASSWORD"),
+                "prefix" => "",
+            ]);
+
+            if ($dbConnection === "sqlsrv") {
+                $app["config"]->set("database.connections.sqlsrv.trust_server_certificate", true);
+            }
+        }
 
         $app["config"]->set("app.aliases", [
             "TestModel" => \App\Models\TestModel::class,
@@ -42,9 +72,8 @@ class ModelCommandTest extends TestCase
         $this->folderSeeder = version_compare(app()->version(), "8.0.0") >= 0 ? "seeders" : "seeds";
         $this->beforeLaravel7 = version_compare(app()->version(), "7.0.0") < 0;
 
-        if ($this->beforeLaravel7) {
-            $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
-        }
+        \DB::connection()->getSchemaBuilder()->dropAllTables();
+        $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
 
         if (!File::exists(database_path($this->folderSeeder))) {
             File::makeDirectory(database_path($this->folderSeeder));

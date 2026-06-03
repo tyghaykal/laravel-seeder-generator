@@ -1,4 +1,5 @@
 <?php
+
 namespace TYGHaykal\LaravelSeedGenerator\Commands\Model;
 
 use Illuminate\Support\Str;
@@ -106,7 +107,8 @@ class ModelCommand
                 //return all fields except the ignored fields
                 $dataArray = array_diff_key($dataArray, array_flip($ignoredFields));
             }
-            $dataArray = StringHelper::prettyPrintArray($dataArray, 3);
+            ksort($dataArray);
+            $dataArray = StringHelper::prettyPrintArray($dataArray, 4);
 
             $code = "\$newData$key = \\" . get_class($modelInstance->getModel()) . "::create(" . $dataArray . ");";
 
@@ -125,6 +127,7 @@ class ModelCommand
                             ->toArray();
                         $relationCode = "";
                         foreach ($relationSubDatas as $subRelationKey => $relationSubData) {
+                            ksort($relationSubData);
                             $relationSubData = StringHelper::prettyPrintArray($relationSubData, 4);
                             if ($subRelationKey > 0) {
                                 $relationSubData = StringHelper::generateIndentation($relationSubData, 3);

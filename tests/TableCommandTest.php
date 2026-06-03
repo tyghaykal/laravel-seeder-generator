@@ -5,14 +5,12 @@ namespace TYGHaykal\LaravelSeedGenerator\Tests;
 use Orchestra\Testbench\TestCase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use TYGHaykal\LaravelSeedGenerator\SeedGeneratorServiceProvider;
 use TYGHaykal\LaravelSeedGenerator\Commands\SeedGeneratorCommand;
 use TYGHaykal\LaravelSeedGenerator\Tests\Database\Seeders\TestModelSeeder;
 
 class TableCommandTest extends TestCase
 {
-    use RefreshDatabase;
     private $folderResult = false,
         $folderSeeder = "",
         $beforeLaravel7 = false;
@@ -22,14 +20,45 @@ class TableCommandTest extends TestCase
         return [SeedGeneratorServiceProvider::class];
     }
 
-    protected function defineDatabaseMigrations()
-    {
-        $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
-    }
-
     protected function getEnvironmentSetUp($app)
     {
-        $app["config"]->set("database.default", "testing");
+        $dbConnection = env("DB_CONNECTION", "testing");
+        $sqliteDatabase = database_path("testbench.sqlite");
+        if (!file_exists($sqliteDatabase)) {
+            touch($sqliteDatabase);
+        }
+
+        $app["config"]->set("database.default", $dbConnection);
+
+        if ($dbConnection === "testing") {
+            $app["config"]->set("database.connections.testing", [
+                "driver" => "sqlite",
+                "database" => $sqliteDatabase,
+                "prefix" => "",
+                "foreign_key_constraints" => true,
+            ]);
+        }
+
+        if ($dbConnection !== "testing") {
+            $database = env("DB_DATABASE");
+            if ($dbConnection === "sqlite" && $database === "testing") {
+                $database = $sqliteDatabase;
+            }
+
+            $app["config"]->set("database.connections.$dbConnection", [
+                "driver" => $dbConnection === "mariadb" ? "mysql" : $dbConnection,
+                "host" => env("DB_HOST", "127.0.0.1"),
+                "port" => env("DB_PORT"),
+                "database" => $database,
+                "username" => env("DB_USERNAME"),
+                "password" => env("DB_PASSWORD"),
+                "prefix" => "",
+            ]);
+
+            if ($dbConnection === "sqlsrv") {
+                $app["config"]->set("database.connections.sqlsrv.trust_server_certificate", true);
+            }
+        }
 
         $app["config"]->set("app.aliases", [
             "TestModel" => \App\Models\TestModel::class,
@@ -44,9 +73,8 @@ class TableCommandTest extends TestCase
         $this->folderSeeder = version_compare(app()->version(), "8.0.0") >= 0 ? "seeders" : "seeds";
         $this->beforeLaravel7 = version_compare(app()->version(), "7.0.0") < 0;
 
-        if ($this->beforeLaravel7) {
-            $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
-        }
+        \DB::connection()->getSchemaBuilder()->dropAllTables();
+        $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
 
         if (!File::exists(database_path($this->folderSeeder))) {
             File::makeDirectory(database_path($this->folderSeeder));
@@ -1108,12 +1136,12 @@ class TableCommandTest extends TestCase
     public function test_seed_generator_preserves_leading_zeros_in_table_names()
     {
         // Create a table with leading zeros in the name
-        \DB::statement('CREATE TABLE "000_test_table" (
-            id INTEGER PRIMARY KEY,
-            name VARCHAR(255),
-            "0name" VARCHAR(255),
-            "00_column" VARCHAR(255)
-        )');
+        \Schema::create('000_test_table', function ($table) {
+            $table->integer('id')->primary();
+            $table->string('name')->nullable();
+            $table->string('0name')->nullable();
+            $table->string('00_column')->nullable();
+        });
 
         // Insert test data
         \DB::table('000_test_table')->insert([
@@ -1151,13 +1179,13 @@ class TableCommandTest extends TestCase
     public function test_seed_generator_preserves_leading_zeros_in_column_names()
     {
         // Create a table with various leading zero column names
-        \DB::statement('CREATE TABLE test_leading_zeros (
-            id INTEGER PRIMARY KEY,
-            "0name" VARCHAR(255),
-            "00_id" INTEGER,
-            "000_code" VARCHAR(255),
-            "0_priority" INTEGER
-        )');
+        \Schema::create('test_leading_zeros', function ($table) {
+            $table->integer('id')->primary();
+            $table->string('0name')->nullable();
+            $table->integer('00_id')->nullable();
+            $table->string('000_code')->nullable();
+            $table->integer('0_priority')->nullable();
+        });
 
         // Insert test data
         \DB::table('test_leading_zeros')->insert([

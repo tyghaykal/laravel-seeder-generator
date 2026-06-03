@@ -1,4 +1,5 @@
 <?php
+
 namespace TYGHaykal\LaravelSeedGenerator\Commands\Table;
 
 use Illuminate\Contracts\Config\Repository;
@@ -50,6 +51,7 @@ class TableCommand
 
         switch ($databaseType) {
             case 'mysql':
+            case 'mariadb':
                 $query = 'SHOW TABLES';
                 $tables = array_map('current', DB::connection($databaseConnection)->select($query));
                 break;
@@ -65,8 +67,9 @@ class TableCommand
                 break;
 
             case 'sqlsrv':
+            case 'dblib':
                 $query =
-                    "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_catalog=DATABASE()";
+                    "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_catalog=DB_NAME()";
                 $tables = array_column(DB::connection($databaseConnection)->select($query), 'table_name');
                 break;
 
@@ -168,7 +171,9 @@ class TableCommand
             if ($key != 0) {
                 $code .= ",\n" . StringHelper::generateIndentation("", 3);
             }
-            $code .= StringHelper::prettyPrintArray((array) $tableData, 4);
+            $dataArray = (array) $tableData;
+            ksort($dataArray);
+            $code .= StringHelper::prettyPrintArray($dataArray, 4);
         }
 
         $code = "[\n" . StringHelper::generateIndentation($code, 3) . "\n" . StringHelper::generateIndentation("]", 2);
