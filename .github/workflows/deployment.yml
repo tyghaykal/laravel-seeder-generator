@@ -61,12 +61,6 @@ jobs:
           MSSQL_PID: "Developer"
         ports:
           - 1433:1433
-        options: >-
-          --health-cmd="bash -c '(/opt/mssql-tools18/bin/sqlcmd || /opt/mssql-tools/bin/sqlcmd) -C -S localhost -U sa -P Password123! -Q \"SELECT 1\"'"
-          --health-interval=10s
-          --health-timeout=10s
-          --health-start-period=30s
-          --health-retries=15
 
     steps:
       - name: Checkout code
@@ -98,6 +92,21 @@ jobs:
 
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+
+      - name: Wait for SQL Server
+        if: matrix.database == 'sqlsrv'
+        run: |
+          for i in {1..30}; do
+            if docker exec ${{ job.services.sqlsrv.id }} bash -lc 'SQLCMD=$([ -x /opt/mssql-tools18/bin/sqlcmd ] && echo /opt/mssql-tools18/bin/sqlcmd || echo /opt/mssql-tools/bin/sqlcmd); "$SQLCMD" -C -S localhost -U sa -P "Password123!" -Q "SELECT 1"' > /dev/null 2>&1; then
+              echo "SQL Server is ready."
+              exit 0
+            fi
+            echo "Waiting for SQL Server to be ready..."
+            sleep 5
+          done
+          echo "SQL Server did not become ready in time."
+          docker logs ${{ job.services.sqlsrv.id }}
+          exit 1
 
       - name: Fix MySQL 8 authentication
         if: matrix.database == 'mysql'
