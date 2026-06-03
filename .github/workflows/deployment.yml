@@ -61,7 +61,12 @@ jobs:
           MSSQL_PID: "Developer"
         ports:
           - 1433:1433
-        options: --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password123! -Q 'SELECT 1'" --health-interval=10s --health-timeout=5s --health-retries=10
+        options: >-
+          --health-cmd="bash -c '(/opt/mssql-tools18/bin/sqlcmd || /opt/mssql-tools/bin/sqlcmd) -C -S localhost -U sa -P Password123! -Q \"SELECT 1\"'"
+          --health-interval=10s
+          --health-timeout=10s
+          --health-start-period=30s
+          --health-retries=15
 
     steps:
       - name: Checkout code
