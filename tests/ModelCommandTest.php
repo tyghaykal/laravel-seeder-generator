@@ -5,14 +5,14 @@ namespace TYGHaykal\LaravelSeedGenerator\Tests;
 use Orchestra\Testbench\TestCase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use TYGHaykal\LaravelSeedGenerator\SeedGeneratorServiceProvider;
 use TYGHaykal\LaravelSeedGenerator\Commands\SeedGeneratorCommand;
 use TYGHaykal\LaravelSeedGenerator\Tests\Database\Seeders\TestModelSeeder;
 
 class ModelCommandTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations;
     private $folderResult = false,
         $folderSeeder = "",
         $beforeLaravel7 = false;

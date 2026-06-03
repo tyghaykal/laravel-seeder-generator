@@ -5,14 +5,14 @@ namespace TYGHaykal\LaravelSeedGenerator\Tests;
 use Orchestra\Testbench\TestCase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use TYGHaykal\LaravelSeedGenerator\SeedGeneratorServiceProvider;
 use TYGHaykal\LaravelSeedGenerator\Commands\SeedGeneratorCommand;
 use TYGHaykal\LaravelSeedGenerator\Tests\Database\Seeders\TestModelSeeder;
 
 class TableCommandTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations;
     private $folderResult = false,
         $folderSeeder = "",
         $beforeLaravel7 = false;
@@ -1131,14 +1131,14 @@ class TableCommandTest extends TestCase
     {
         // Create a table with leading zeros in the name
         \Schema::create('000_test_table', function ($table) {
-            $table->increments('id');
+            $table->integer('id')->primary();
             $table->string('name')->nullable();
             $table->string('0name')->nullable();
             $table->string('00_column')->nullable();
         });
 
         // Insert test data
-        $this->insertIntoTable('000_test_table', [
+        \DB::table('000_test_table')->insert([
             'id' => 1,
             'name' => 'test',
             '0name' => 'zero_name',
@@ -1174,7 +1174,7 @@ class TableCommandTest extends TestCase
     {
         // Create a table with various leading zero column names
         \Schema::create('test_leading_zeros', function ($table) {
-            $table->increments('id');
+            $table->integer('id')->primary();
             $table->string('0name')->nullable();
             $table->integer('00_id')->nullable();
             $table->string('000_code')->nullable();
@@ -1182,7 +1182,7 @@ class TableCommandTest extends TestCase
         });
 
         // Insert test data
-        $this->insertIntoTable('test_leading_zeros', [
+        \DB::table('test_leading_zeros')->insert([
             'id' => 1,
             '0name' => 'test_name',
             '00_id' => 123,
@@ -1216,17 +1216,5 @@ class TableCommandTest extends TestCase
         // Verify that string values remain as strings
         $this->assertStringContainsString("'test_name'", $seederContent);
         $this->assertStringContainsString("'ABC123'", $seederContent);
-    }
-
-    private function insertIntoTable(string $table, array $data)
-    {
-        $driver = \DB::connection()->getPdo()->getAttribute(\PDO::ATTR_DRIVER_NAME);
-        if ($driver === 'sqlsrv' || $driver === 'dblib') {
-            \DB::statement("SET IDENTITY_INSERT [$table] ON");
-            \DB::table($table)->insert($data);
-            \DB::statement("SET IDENTITY_INSERT [$table] OFF");
-        } else {
-            \DB::table($table)->insert($data);
-        }
     }
 }
