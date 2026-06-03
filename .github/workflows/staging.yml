@@ -55,13 +55,14 @@ jobs:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
       sqlsrv:
-        image: mcr.microsoft.com/mssql/server:2022-latest
+        image: mcr.microsoft.com/mssql/server:2019-latest
         env:
           ACCEPT_EULA: "Y"
           MSSQL_SA_PASSWORD: "Password123!"
           MSSQL_PID: "Developer"
         ports:
           - 1433:1433
+        options: --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password123! -Q 'SELECT 1'" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
       - name: Checkout code
