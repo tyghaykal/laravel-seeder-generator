@@ -72,11 +72,8 @@ class ModelCommandTest extends TestCase
         $this->folderSeeder = version_compare(app()->version(), "8.0.0") >= 0 ? "seeders" : "seeds";
         $this->beforeLaravel7 = version_compare(app()->version(), "7.0.0") < 0;
 
-        Artisan::call("migrate:fresh", [
-            "--database" => config("database.default"),
-            "--path" => __DIR__ . "/database/migrations",
-            "--realpath" => true,
-        ]);
+        \DB::connection()->getSchemaBuilder()->dropAllTables();
+        $this->loadMigrationsFrom(__DIR__ . "/database/migrations");
 
         if (!File::exists(database_path($this->folderSeeder))) {
             File::makeDirectory(database_path($this->folderSeeder));
