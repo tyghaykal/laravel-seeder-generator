@@ -77,9 +77,15 @@ jobs:
       - name: Install SQL Server driver (Linux)
         if: matrix.database == 'sqlsrv'
         run: |
-          sudo curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-          sudo curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list > ./mssql-release.list
-          sudo mv ./mssql-release.list /etc/apt/sources.list.d/
+          source /etc/os-release
+          UBUNTU_VERSION="${VERSION_ID}"
+          if ! curl -fsSL "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VERSION}/prod.list" > ./mssql-release.list; then
+            UBUNTU_VERSION="22.04"
+            curl -fsSL "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VERSION}/prod.list" > ./mssql-release.list
+          fi
+          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+          sudo install -o root -g root -m 644 microsoft.gpg /usr/share/keyrings/microsoft-prod.gpg
+          sed "s#^deb #deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] #" ./mssql-release.list | sudo tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
 
