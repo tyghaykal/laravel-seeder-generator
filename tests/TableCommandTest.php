@@ -33,11 +33,16 @@ class TableCommandTest extends TestCase
         $app["config"]->set("database.default", $dbConnection);
 
         if ($dbConnection !== "testing") {
+            $database = env("DB_DATABASE");
+            if ($dbConnection === "sqlite" && $database === "testing") {
+                $database = ":memory:";
+            }
+
             $app["config"]->set("database.connections.$dbConnection", [
                 "driver" => $dbConnection === "mariadb" ? "mysql" : $dbConnection,
                 "host" => env("DB_HOST", "127.0.0.1"),
                 "port" => env("DB_PORT"),
-                "database" => env("DB_DATABASE"),
+                "database" => $database,
                 "username" => env("DB_USERNAME"),
                 "password" => env("DB_PASSWORD"),
                 "prefix" => "",

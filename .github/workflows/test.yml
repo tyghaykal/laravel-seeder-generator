@@ -37,7 +37,7 @@ jobs:
           MYSQL_DATABASE: testing
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping -ppassword" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --health-cmd="mysqladmin ping -ppassword" --health-interval=10s --health-timeout=5s --health-retries=3 --default-authentication-plugin=mysql_native_password
       mariadb:
         image: mariadb:10.11
         env:
@@ -73,6 +73,16 @@ jobs:
           php-version: ${{ matrix.php-laravel.php }}
           extensions: pdo, sqlite, pdo_sqlite, mysql, pdo_mysql, pgsql, pdo_pgsql, sqlsrv, pdo_sqlsrv
           coverage: none
+          tools: composer:v2
+
+      - name: Install SQL Server driver (Linux)
+        if: matrix.database == 'sqlsrv'
+        run: |
+          sudo curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+          sudo curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list > ./mssql-release.list
+          sudo mv ./mssql-release.list /etc/apt/sources.list.d/
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
 
       - name: Install dependencies
         run: |
