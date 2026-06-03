@@ -62,6 +62,7 @@ jobs:
           MSSQL_PID: "Developer"
         ports:
           - 1433:1433
+        options: --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password123! -Q 'SELECT 1'" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
       - name: Checkout code
@@ -82,10 +83,10 @@ jobs:
           # Use the current version, but fallback to 22.04 if on 24.04 (Noble) since Microsoft might not have it yet
           REPO_VERSION=$VERSION_ID
           if [ "$VERSION_ID" = "24.04" ]; then REPO_VERSION="22.04"; fi
-          
+
           curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
           echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/${REPO_VERSION}/prod $(lsb_release -cs 2>/dev/null || echo jammy) main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
-          
+
           # If the above failed (e.g. codename mismatch), try a safer fallback for 22.04
           if [ "$VERSION_ID" = "24.04" ]; then
             echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/22.04/prod jammy main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
