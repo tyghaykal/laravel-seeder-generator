@@ -171,7 +171,9 @@ class TableCommand
             if ($key != 0) {
                 $code .= ",\n" . StringHelper::generateIndentation("", 3);
             }
-            $code .= StringHelper::prettyPrintArray((array) $tableData, 4);
+            $dataArray = (array) $tableData;
+            ksort($dataArray);
+            $code .= StringHelper::prettyPrintArray($dataArray, 4);
         }
 
         $code = "[\n" . StringHelper::generateIndentation($code, 3) . "\n" . StringHelper::generateIndentation("]", 2);

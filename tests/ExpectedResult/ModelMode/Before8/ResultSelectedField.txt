@@ -20,16 +20,16 @@ class TestModelSeeder extends Seeder
 
         
         $newData0 = \App\Models\TestModel::create([
-            'id' => 1,
-            'name' => 'test 1',
-        ]);
+                'id' => 1,
+                'name' => 'test 1',
+            ]);
         $newData1 = \App\Models\TestModel::create([
-            'id' => 2,
-            'name' => 'test 2',
-        ]);
+                'id' => 2,
+                'name' => 'test 2',
+            ]);
         $newData2 = \App\Models\TestModel::create([
-            'id' => 3,
-            'name' => 'test 3',
-        ]);
+                'id' => 3,
+                'name' => 'test 3',
+            ]);
     }
 }

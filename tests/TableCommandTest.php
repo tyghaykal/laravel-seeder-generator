@@ -1125,12 +1125,12 @@ class TableCommandTest extends TestCase
     public function test_seed_generator_preserves_leading_zeros_in_table_names()
     {
         // Create a table with leading zeros in the name
-        \DB::statement('CREATE TABLE "000_test_table" (
-            id INTEGER PRIMARY KEY,
-            name VARCHAR(255),
-            "0name" VARCHAR(255),
-            "00_column" VARCHAR(255)
-        )');
+        \Schema::create('000_test_table', function ($table) {
+            $table->increments('id');
+            $table->string('name')->nullable();
+            $table->string('0name')->nullable();
+            $table->string('00_column')->nullable();
+        });
 
         // Insert test data
         \DB::table('000_test_table')->insert([
@@ -1168,13 +1168,13 @@ class TableCommandTest extends TestCase
     public function test_seed_generator_preserves_leading_zeros_in_column_names()
     {
         // Create a table with various leading zero column names
-        \DB::statement('CREATE TABLE test_leading_zeros (
-            id INTEGER PRIMARY KEY,
-            "0name" VARCHAR(255),
-            "00_id" INTEGER,
-            "000_code" VARCHAR(255),
-            "0_priority" INTEGER
-        )');
+        \Schema::create('test_leading_zeros', function ($table) {
+            $table->increments('id');
+            $table->string('0name')->nullable();
+            $table->integer('00_id')->nullable();
+            $table->string('000_code')->nullable();
+            $table->integer('0_priority')->nullable();
+        });
 
         // Insert test data
         \DB::table('test_leading_zeros')->insert([
